@@ -1224,8 +1224,9 @@ export default function App() {
       }, 0),
     [cart, products],
   );
+  const currentTelegramUser = user ?? getTelegramUser();
   const admin =
-    String(user?.id ?? "").trim() === String(ADMIN_ID ?? "").trim() ||
+    String(currentTelegramUser?.id ?? "").trim() === String(ADMIN_ID ?? "").trim() ||
     (typeof window !== "undefined" && ["localhost", "127.0.0.1", "192.168.1.5"].includes(window.location.hostname));
   const relatedProducts = useMemo(() => {
     if (!selected) return [];
@@ -1647,7 +1648,6 @@ export default function App() {
                   {t.adminPanel}
                 </button>
               ) : null}
-              <FireworkName user={user} lang={lang} />
               <div className="glass-pill flex h-11 w-11 items-center justify-center rounded-full p-0.5">
                 <UserAvatar user={user} />
               </div>
