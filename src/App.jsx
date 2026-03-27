@@ -1227,7 +1227,7 @@ export default function App() {
   const currentTelegramUser = user ?? getTelegramUser();
   const adminDebug =
     typeof window !== "undefined" && window.Telegram?.WebApp
-      ? `TG: ${currentTelegramUser?.id ?? "none"} | ENV: ${String(ADMIN_ID ?? "").trim() || "none"}`
+      ? `TG: ${currentTelegramUser?.id ?? "none"} | ENV: ${String(ADMIN_ID ?? "").trim() || "none"} | ADMIN: ${String(currentTelegramUser?.id ?? "").trim() === String(ADMIN_ID ?? "").trim() ? "YES" : "NO"}`
       : "";
   const admin =
     String(currentTelegramUser?.id ?? "").trim() === String(ADMIN_ID ?? "").trim() ||
@@ -1662,6 +1662,12 @@ export default function App() {
               </div>
             </div>
           </header>
+
+        {adminDebug ? (
+          <div className="mt-3 rounded-[22px] border border-[#ff9dbd]/35 bg-[#fff3f7]/85 px-4 py-3 text-[11px] font-black tracking-[0.08em] text-candy-ink shadow-card backdrop-blur dark:border-white/12 dark:bg-white/8 dark:text-white">
+            {adminDebug}
+          </div>
+        ) : null}
 
         <section className="mt-5">
           <div className="mb-3 flex items-center justify-between">
