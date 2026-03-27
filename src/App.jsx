@@ -1225,6 +1225,10 @@ export default function App() {
     [cart, products],
   );
   const currentTelegramUser = user ?? getTelegramUser();
+  const adminDebug =
+    typeof window !== "undefined" && window.Telegram?.WebApp
+      ? `TG: ${currentTelegramUser?.id ?? "none"} | ENV: ${String(ADMIN_ID ?? "").trim() || "none"}`
+      : "";
   const admin =
     String(currentTelegramUser?.id ?? "").trim() === String(ADMIN_ID ?? "").trim() ||
     (typeof window !== "undefined" && ["localhost", "127.0.0.1", "192.168.1.5"].includes(window.location.hostname));
@@ -1647,6 +1651,11 @@ export default function App() {
                 >
                   {t.adminPanel}
                 </button>
+              ) : null}
+              {!admin && adminDebug ? (
+                <div className="glass-pill rounded-full px-3 py-2 text-[10px] font-bold text-candy-ink/75 shadow-card dark:text-white/75">
+                  {adminDebug}
+                </div>
               ) : null}
               <div className="glass-pill flex h-11 w-11 items-center justify-center rounded-full p-0.5">
                 <UserAvatar user={user} />
