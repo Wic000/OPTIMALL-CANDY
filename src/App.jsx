@@ -431,6 +431,22 @@ const write = (key, value) => {
   }
 };
 const tg = () => window.Telegram?.WebApp;
+const getTelegramUser = () => {
+  const webApp = tg();
+  const unsafeUser = webApp?.initDataUnsafe?.user;
+  if (unsafeUser?.id) return unsafeUser;
+
+  const initData = webApp?.initData;
+  if (!initData) return null;
+
+  try {
+    const params = new URLSearchParams(initData);
+    const rawUser = params.get("user");
+    return rawUser ? JSON.parse(rawUser) : null;
+  } catch {
+    return null;
+  }
+};
 const slug = (v) => v.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
 const toDataUrl = (file) =>
   new Promise((resolve, reject) => {
@@ -1155,9 +1171,30 @@ export default function App() {
     };
   }, []);
   useEffect(() => {
-    tg()?.ready?.();
-    tg()?.expand?.();
-    setUser(tg()?.initDataUnsafe?.user ?? null);
+    const webApp = tg();
+    webApp?.ready?.();
+    webApp?.expand?.();
+
+    const syncUser = () => {
+      const nextUser = getTelegramUser();
+      if (nextUser?.id) {
+        setUser(nextUser);
+        return true;
+      }
+      return false;
+    };
+
+    if (syncUser()) return undefined;
+
+    let attempts = 0;
+    const timer = window.setInterval(() => {
+      attempts += 1;
+      if (syncUser() || attempts >= 12) {
+        window.clearInterval(timer);
+      }
+    }, 500);
+
+    return () => window.clearInterval(timer);
   }, []);
   useEffect(() => {
     if (!toast) return;
@@ -1182,7 +1219,9 @@ export default function App() {
       }, 0),
     [cart, products],
   );
-  const admin = String(user?.id ?? "") === String(ADMIN_ID) || (typeof window !== "undefined" && ["localhost", "127.0.0.1", "192.168.1.5"].includes(window.location.hostname));
+  const admin =
+    String(user?.id ?? "").trim() === String(ADMIN_ID ?? "").trim() ||
+    (typeof window !== "undefined" && ["localhost", "127.0.0.1", "192.168.1.5"].includes(window.location.hostname));
   const relatedProducts = useMemo(() => {
     if (!selected) return [];
     return products
