@@ -599,6 +599,23 @@ export default function App() {
           <div className="absolute inset-0 bg-gradient-to-br from-candy-pink/70 via-candy-coral/55 to-candy-peach/45" />
           <div className="absolute -right-10 -top-14 h-32 w-32 rounded-full bg-white/20 blur-xl" />
           <div className="absolute -bottom-12 left-0 h-28 w-28 rounded-full bg-candy-plum/30 blur-xl" />
+          <div className="hero-bubble-scene absolute inset-0">
+            {heroBubbleItems.map((item) => (
+              <div
+                key={item.id}
+                className={`hero-bubble hero-bubble-${item.size} absolute flex items-center justify-center rounded-full text-white`}
+                style={{
+                  top: item.top,
+                  left: item.left,
+                  animationDelay: item.delay,
+                  animationDuration: item.duration,
+                }}
+              >
+                <span className="hero-bubble-glow absolute inset-[12%] rounded-full" />
+                <span className="relative text-lg">{item.label}</span>
+              </div>
+            ))}
+          </div>
           <div className="relative">
             <div className="glass-pill inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold">
               <span className="h-2 w-2 rounded-full bg-white" />
@@ -606,27 +623,6 @@ export default function App() {
             </div>
             <h2 className="mt-4 text-[30px] font-black leading-[1.05]">{t.heroTitle}</h2>
             <p className="mt-3 max-w-[18rem] text-sm leading-6 text-white/88">{t.heroText}</p>
-
-            <div className="mt-5 flex justify-end">
-              <div className="hero-bubble-field relative h-48 w-48 overflow-hidden rounded-[32px]">
-                <div className="absolute inset-0 rounded-[32px] bg-white/8" />
-                {heroBubbleItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className={`hero-bubble hero-bubble-${item.size} absolute flex items-center justify-center rounded-full text-white`}
-                    style={{
-                      top: item.top,
-                      left: item.left,
-                      animationDelay: item.delay,
-                      animationDuration: item.duration,
-                    }}
-                  >
-                    <span className="hero-bubble-glow absolute inset-[12%] rounded-full" />
-                    <span className="relative text-lg">{item.label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         </section>
 
