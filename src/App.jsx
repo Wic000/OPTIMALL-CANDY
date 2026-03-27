@@ -172,13 +172,10 @@ const baseProducts = [
   },
 ];
 
-const miniShowcaseItems = [
-  { id: "candy", emoji: "🍬", label: "Candy" },
-  { id: "lollipop", emoji: "🍭", label: "Lollipop" },
-  { id: "chocolate", emoji: "🍫", label: "Chocolate" },
-  { id: "teddy", emoji: "🧸", label: "Teddy" },
-  { id: "balloon", emoji: "🎈", label: "Balloon" },
-  { id: "gift", emoji: "🎁", label: "Gift" },
+const heroPreviewItems = [
+  { id: "sweet", icon: "S", label: "Shirinliklar" },
+  { id: "toy", icon: "T", label: "O'yinchoqlar" },
+  { id: "gift", icon: "24", label: "Sovg'alar" },
 ];
 
 const price = (value) => `${new Intl.NumberFormat("ru-RU").format(value)} so'm`;
@@ -606,18 +603,19 @@ export default function App() {
             <p className="mt-3 max-w-[18rem] text-sm leading-6 text-white/88">{t.heroText}</p>
 
             <div className="mt-5 flex justify-end">
-              <div className="showcase-panel relative flex h-52 w-52 flex-wrap content-start gap-2 overflow-hidden rounded-[30px] p-4">
-                <div className="absolute inset-0 rounded-[30px] bg-white/10" />
-                {miniShowcaseItems.map((item, index) => (
+              <div className="hero-chip-stack relative h-36 w-48">
+                {heroPreviewItems.map((item, index) => (
                   <div
                     key={item.id}
-                    className="showcase-item relative flex h-[4.35rem] w-[4.35rem] flex-col items-center justify-center rounded-[22px] text-center"
-                    style={{ animationDelay: `${0.15 + index * 0.08}s` }}
+                    className={`hero-preview-chip absolute right-0 flex w-40 items-center gap-3 rounded-[22px] px-4 py-3 text-white ${
+                      index === 0 ? "top-0 rotate-[-7deg]" : index === 1 ? "top-10 right-6 rotate-[4deg]" : "top-20 right-1 rotate-[-3deg]"
+                    }`}
+                    style={{ animationDelay: `${0.2 + index * 0.12}s` }}
                   >
-                    <span className="text-2xl">{item.emoji}</span>
-                    <span className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/78">
-                      {item.label}
+                    <span className="hero-preview-icon inline-flex h-10 w-10 items-center justify-center rounded-full text-sm font-black">
+                      {item.icon}
                     </span>
+                    <span className="text-sm font-semibold tracking-[0.01em]">{item.label}</span>
                   </div>
                 ))}
               </div>
