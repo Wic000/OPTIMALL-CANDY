@@ -698,7 +698,8 @@ function AdminPanel({ t, products, categories, setEditing, onDeleteProduct, addC
     });
 
   return (
-    <section className="glass-panel mt-8 animate-rise rounded-[32px] px-4 py-5 text-white shadow-float">
+    <section className="glass-panel animate-rise flex max-h-[calc(100vh-7rem)] flex-col overflow-hidden rounded-[32px] text-white shadow-float">
+      <div className="sticky top-0 z-10 bg-transparent px-4 pb-3 pt-5 backdrop-blur-xl">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.24em] text-white/70">{t.adminHint}</p>
@@ -742,6 +743,9 @@ function AdminPanel({ t, products, categories, setEditing, onDeleteProduct, addC
           </button>
         ))}
       </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-4 pb-5">
 
       {activeTab === "stats" ? (
         <div className="mt-5 grid grid-cols-3 gap-3">
@@ -833,6 +837,7 @@ function AdminPanel({ t, products, categories, setEditing, onDeleteProduct, addC
           </div>
         </div>
       ) : null}
+      </div>
     </section>
   );
 }
@@ -2039,7 +2044,7 @@ export default function App() {
 
       {adminOpen ? (
         <Modal onClose={() => setAdminOpen(false)}>
-          <div className="max-h-[78vh] overflow-y-auto rounded-[30px]">
+          <div className="rounded-[30px]">
             <AdminPanel
               t={t}
               products={products}
