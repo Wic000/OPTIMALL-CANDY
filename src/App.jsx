@@ -1,5 +1,8 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
 
+
+import { hasSupabase, supabase } from "./lib/supabase";
+
 const STORAGE = {
   cart: "optimall-candy-cart",
   theme: "optimall-candy-theme",
@@ -332,6 +335,37 @@ const compactProductsForStorage = (products) =>
     image: product.image || images?.[0] || "",
   }));
 
+const categoryFromRow = (row) => ({
+  id: row.id,
+  name: {
+    uz: row.name_uz,
+    ru: row.name_ru,
+  },
+});
+
+const productToRow = (product) => ({
+  id: product.id,
+  name: product.name,
+  category: product.category,
+  price: Number(product.price) || 0,
+  description: product.description || "",
+  badge: product.badge || "",
+  image: product.image || product.images?.[0] || "",
+  images: product.images?.filter(Boolean).slice(0, 4) || [],
+});
+
+const productFromRow = (row) =>
+  ensureProductGallery({
+    id: row.id,
+    name: row.name,
+    category: row.category,
+    price: row.price,
+    description: row.description,
+    badge: row.badge,
+    image: row.image,
+    images: Array.isArray(row.images) ? row.images : [],
+  });
+
 const randomBubbleMotion = () => ({
   driftX: `${-30 + Math.random() * 60}px`,
   driftY: `${-26 + Math.random() * 20}px`,
@@ -408,11 +442,11 @@ const toDataUrl = (file) =>
 
 function Modal({ children, onClose, bottom = false }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-candy-ink/45 px-4 backdrop-blur-sm">
+    <div className={`fixed inset-0 z-50 flex bg-candy-ink/45 px-4 backdrop-blur-sm ${bottom ? "items-end justify-center" : "items-center justify-center pt-20"}`}>
       <button type="button" className="absolute inset-0" onClick={onClose} aria-label="Close" />
       <div
         className={`relative z-10 w-full max-w-md animate-rise ${bottom ? "mt-auto" : ""}`}
-        style={bottom ? { marginBottom: "calc(1rem + var(--tg-safe-bottom))" } : undefined}
+        style={bottom ? { marginBottom: "calc(1rem + var(--tg-safe-bottom))" } : { marginTop: "max(1rem, env(safe-area-inset-top))", marginBottom: "1rem" }}
       >
         {children}
       </div>
@@ -438,6 +472,22 @@ function Field({ label, value, onChange, placeholder = "", type = "text" }) {
   );
 }
 
+const avatarSvg = (label) =>
+  `data:image/svg+xml;utf8,${encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
+      <defs>
+        <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+          <stop offset="0%" stop-color="#ff89b9"/>
+          <stop offset="48%" stop-color="#ffc86f"/>
+          <stop offset="100%" stop-color="#7edcff"/>
+        </linearGradient>
+      </defs>
+      <rect width="96" height="96" rx="48" fill="url(#g)"/>
+      <circle cx="48" cy="48" r="40" fill="rgba(255,255,255,0.16)"/>
+      <text x="50%" y="56%" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" font-weight="900" fill="#ffffff">${label}</text>
+    </svg>
+  `)}`;
+
 function UserAvatar({ user }) {
   const initials = [user?.first_name, user?.last_name]
     .filter(Boolean)
@@ -445,21 +495,14 @@ function UserAvatar({ user }) {
     .join("")
     .slice(0, 2)
     .toUpperCase();
-
-  if (user?.photo_url) {
-    return (
-      <img
-        src={user.photo_url}
-        alt={user.first_name ?? "User"}
-        className="h-10 w-10 rounded-full border border-white/30 object-cover shadow-card"
-      />
-    );
-  }
+  const fallbackAvatar = avatarSvg(initials || "U");
 
   return (
-    <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-white/16 text-xs font-black text-white shadow-card backdrop-blur">
-      {initials || "U"}
-    </div>
+    <img
+      src={user?.photo_url || fallbackAvatar}
+      alt={user?.first_name ?? "User"}
+      className="h-10 w-10 rounded-full border border-white/30 object-cover shadow-card"
+    />
   );
 }
 
@@ -618,7 +661,7 @@ function ZoomableGallery({ product }) {
   );
 }
 
-function AdminPanel({ t, products, categories, setEditing, setProducts, setCart, addCategory, deleteCategory }) {
+function AdminPanel({ t, products, categories, setEditing, onDeleteProduct, addCategory, deleteCategory }) {
   const [uz, setUz] = useState("");
   const [ru, setRu] = useState("");
   const [activeTab, setActiveTab] = useState("products");
@@ -768,7 +811,7 @@ function AdminPanel({ t, products, categories, setEditing, setProducts, setCart,
                   <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-white/52">{product.images?.filter(Boolean).length || 1} {t.imagesReady}</p>
                 </div>
                 <button type="button" onClick={() => setEditing(product)} className="rounded-full bg-white/12 px-3 py-2 text-xs font-semibold text-white">{t.editProduct}</button>
-                <button type="button" onClick={() => { setProducts((current) => current.filter((item) => item.id !== product.id)); setCart((current) => current.filter((item) => item.id !== product.id)); }} className="rounded-full bg-[#ffc2d8]/14 px-3 py-2 text-xs font-semibold text-[#ffe1ea]">{t.deleteProduct}</button>
+                <button type="button" onClick={() => onDeleteProduct(product.id)} className="rounded-full bg-[#ffc2d8]/14 px-3 py-2 text-xs font-semibold text-[#ffe1ea]">{t.deleteProduct}</button>
               </div>
             ))}
           </div>
@@ -1084,6 +1127,34 @@ export default function App() {
   useEffect(() => write(STORAGE.categories, categories), [categories]);
   useEffect(() => write(STORAGE.cart, cart), [cart]);
   useEffect(() => {
+    if (!hasSupabase || !supabase) return undefined;
+
+    let alive = true;
+
+    const syncFromSupabase = async () => {
+      const [{ data: categoryRows, error: categoryError }, { data: productRows, error: productError }] = await Promise.all([
+        supabase.from("categories").select("*").order("created_at", { ascending: true }),
+        supabase.from("products").select("*").order("created_at", { ascending: false }),
+      ]);
+
+      if (!alive) return;
+
+      if (!categoryError && Array.isArray(categoryRows) && categoryRows.length) {
+        setCategories([baseCategories[0], ...categoryRows.map(categoryFromRow)]);
+      }
+
+      if (!productError && Array.isArray(productRows) && productRows.length) {
+        setProducts(productRows.map(productFromRow));
+      }
+    };
+
+    syncFromSupabase();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+  useEffect(() => {
     tg()?.ready?.();
     tg()?.expand?.();
     setUser(tg()?.initDataUnsafe?.user ?? null);
@@ -1280,6 +1351,20 @@ export default function App() {
         }),
       });
       if (!res.ok) throw new Error("request failed");
+
+      if (hasSupabase && supabase) {
+        await supabase.from("orders").insert({
+          telegram_id: String(user?.id ?? ""),
+          user_name: [user?.first_name, user?.last_name].filter(Boolean).join(" ") || "",
+          username: user?.username || "",
+          phone: checkout.phone,
+          delivery_type: checkout.deliveryType,
+          location: checkout.deliveryType === "delivery" ? checkout.location : "",
+          total_price: totalPrice,
+          products: items,
+        });
+      }
+
       tg()?.HapticFeedback?.notificationOccurred?.("success");
       setCart([]);
       setCheckout({ phone: "", deliveryType: "delivery", location: "", giftWrap: false });
@@ -1301,7 +1386,7 @@ export default function App() {
     }
   };
 
-  const saveProduct = (form) => {
+  const saveProduct = async (form) => {
     const uploadedImages = form.images?.map((item) => item?.trim?.() ?? item).filter(Boolean) ?? [];
     const gallery = uploadedImages.length
       ? uploadedImages.slice(0, 4)
@@ -1323,26 +1408,93 @@ export default function App() {
       description: form.description,
       badge: form.badge,
     };
-    setProducts((current) =>
-      current.some((item) => item.id === payload.id)
-        ? current.map((item) => (item.id === payload.id ? payload : item))
-        : [payload, ...current],
-    );
+
+    if (hasSupabase && supabase) {
+      const { data, error } = await supabase
+        .from("products")
+        .upsert(productToRow(payload))
+        .select()
+        .single();
+
+      if (error) {
+        setToast(t.orderError);
+        return;
+      }
+
+      const savedProduct = productFromRow(data);
+      setProducts((current) =>
+        current.some((item) => item.id === savedProduct.id)
+          ? current.map((item) => (item.id === savedProduct.id ? savedProduct : item))
+          : [savedProduct, ...current],
+      );
+    } else {
+      setProducts((current) =>
+        current.some((item) => item.id === payload.id)
+          ? current.map((item) => (item.id === payload.id ? payload : item))
+          : [payload, ...current],
+      );
+    }
+
     setEditing(null);
     setToast(t.productSaved);
   };
 
-  const addCategory = (uz, ru) => {
+  const addCategory = async (uz, ru) => {
     const id = uz.trim() || ru.trim();
     if (!id || categories.some((item) => item.id === id)) return;
-    setCategories((current) => [...current, { id, name: { uz: uz || id, ru: ru || id } }]);
+
+    const nextCategory = { id, name: { uz: uz || id, ru: ru || id } };
+
+    if (hasSupabase && supabase) {
+      const { data, error } = await supabase
+        .from("categories")
+        .upsert({
+          id,
+          name_uz: nextCategory.name.uz,
+          name_ru: nextCategory.name.ru,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        setToast(t.orderError);
+        return;
+      }
+
+      setCategories((current) => [...current, categoryFromRow(data)]);
+    } else {
+      setCategories((current) => [...current, nextCategory]);
+    }
+
     setToast(t.categorySaved);
   };
 
-  const deleteCategory = (categoryId) => {
+  const deleteCategory = async (categoryId) => {
     if (products.some((item) => item.category === categoryId)) return;
+
+    if (hasSupabase && supabase) {
+      const { error } = await supabase.from("categories").delete().eq("id", categoryId);
+      if (error) {
+        setToast(t.orderError);
+        return;
+      }
+    }
+
     setCategories((current) => current.filter((item) => item.id !== categoryId));
     setToast(t.categoryDeleted);
+  };
+
+  const deleteProduct = async (productId) => {
+    if (hasSupabase && supabase) {
+      const { error } = await supabase.from("products").delete().eq("id", productId);
+      if (error) {
+        setToast(t.orderError);
+        return;
+      }
+    }
+
+    setProducts((current) => current.filter((item) => item.id !== productId));
+    setCart((current) => current.filter((item) => item.id !== productId));
   };
   useEffect(() => {
     const webApp = tg();
@@ -1599,8 +1751,7 @@ export default function App() {
             products={products}
             categories={categories.filter((item) => item.id !== "all")}
             setEditing={setEditing}
-            setProducts={setProducts}
-            setCart={setCart}
+            onDeleteProduct={deleteProduct}
             addCategory={addCategory}
             deleteCategory={deleteCategory}
           />
@@ -1630,13 +1781,15 @@ export default function App() {
       {selected ? (
         <Modal onClose={() => setSelected(null)}>
           <div
-            className="glass-panel product-modal-card-zoom overflow-hidden rounded-[30px] p-4 text-candy-ink shadow-float dark:text-white"
+            className="glass-panel product-modal-card-zoom flex max-h-[calc(100vh-7rem)] flex-col overflow-hidden rounded-[30px] text-candy-ink shadow-float dark:text-white"
             style={{
               "--modal-origin-x": `${selectedOrigin?.dx ?? 0}px`,
               "--modal-origin-y": `${selectedOrigin?.dy ?? 0}px`,
               "--modal-origin-scale": selectedOrigin?.scale ?? 0.7,
+              marginBottom: "calc(1rem + var(--tg-safe-bottom))",
             }}
           >
+            <div className="modal-scroll-area flex-1 overflow-y-auto px-4 pb-4 pt-4">
             <ZoomableGallery product={selected} />
             <div className="mt-4">
               <div className="flex items-center justify-between gap-3">
@@ -1687,6 +1840,9 @@ export default function App() {
                   </div>
                 </div>
               ) : null}
+            </div>
+            </div>
+            <div className="border-t border-white/12 bg-white/72 px-4 pb-[calc(1rem+var(--tg-safe-bottom))] pt-3 backdrop-blur-xl dark:bg-candy-ink/58">
               <button
                 type="button"
                 onClick={(event) => {
@@ -1694,7 +1850,7 @@ export default function App() {
                   addToCartFromElement(selected, sourceImage);
                   setSelected(null);
                 }}
-                className="mt-5 w-full rounded-2xl bg-candy-ink px-4 py-3 font-semibold text-white dark:bg-white dark:text-candy-ink"
+                className="w-full rounded-2xl bg-candy-ink px-4 py-3 font-semibold text-white dark:bg-white dark:text-candy-ink"
               >
                 {t.addToCart}
               </button>
@@ -1811,9 +1967,9 @@ export default function App() {
               products={products}
               categories={categories.filter((item) => item.id !== "all")}
               setEditing={setEditing}
-              setProducts={setProducts}
-              setCart={setCart}
+              onDeleteProduct={deleteProduct}
               addCategory={addCategory}
+              deleteCategory={deleteCategory}
             />
           </div>
         </Modal>
@@ -1933,34 +2089,34 @@ function FireworkName({ user, lang }) {
         const targetY = height * 0.58;
         const hue = (index * 38 + 20) % 360;
         const delay = index * 0.3;
-        const cycle = (baseTime - delay) % 5.4;
-        const phase = cycle < 0 ? cycle + 5.4 : cycle;
+        const cycle = (baseTime - delay) % 4.4;
+        const phase = cycle < 0 ? cycle + 4.4 : cycle;
 
-        if (phase < 1.1) {
-          const p = phase / 1.1;
+        if (phase < 0.9) {
+          const p = phase / 0.9;
           const startX = targetX + (index % 2 === 0 ? -20 : 20);
           const startY = height + 8;
           const x = startX + (targetX - startX) * p;
           const y = startY + (targetY - startY) * p;
 
-          ctx.strokeStyle = `hsla(${hue}, 95%, 68%, ${0.2 + p * 0.75})`;
-          ctx.lineWidth = 2;
+          ctx.strokeStyle = `hsla(${hue}, 100%, 66%, ${0.32 + p * 0.82})`;
+          ctx.lineWidth = 2.4;
           ctx.beginPath();
           ctx.moveTo(startX, startY);
           ctx.lineTo(x, y);
           ctx.stroke();
 
-          ctx.fillStyle = `hsla(${hue}, 100%, 78%, ${0.55 + p * 0.4})`;
+          ctx.fillStyle = `hsla(${hue}, 100%, 82%, ${0.72 + p * 0.28})`;
           ctx.beginPath();
-          ctx.arc(x, y, 2.2 + p * 1.2, 0, Math.PI * 2);
+          ctx.arc(x, y, 2.8 + p * 1.6, 0, Math.PI * 2);
           ctx.fill();
-        } else if (phase < 1.8) {
-          const p = (phase - 1.1) / 0.7;
-          for (let ray = 0; ray < 8; ray += 1) {
-            const angle = (Math.PI * 2 * ray) / 8 + index * 0.25;
-            const length = 3 + p * 10;
-            ctx.strokeStyle = `hsla(${hue}, 100%, 76%, ${0.85 - p * 0.55})`;
-            ctx.lineWidth = 1.6;
+        } else if (phase < 1.55) {
+          const p = (phase - 0.9) / 0.65;
+          for (let ray = 0; ray < 10; ray += 1) {
+            const angle = (Math.PI * 2 * ray) / 10 + index * 0.22;
+            const length = 4 + p * 12;
+            ctx.strokeStyle = `hsla(${hue}, 100%, 80%, ${0.95 - p * 0.48})`;
+            ctx.lineWidth = 1.8;
             ctx.beginPath();
             ctx.moveTo(targetX, targetY);
             ctx.lineTo(targetX + Math.cos(angle) * length, targetY + Math.sin(angle) * length);
@@ -1968,20 +2124,37 @@ function FireworkName({ user, lang }) {
           }
         }
 
-        const textPhase = Math.min(1, Math.max(0, (phase - 1.15) / 0.55));
-        const fadePhase = phase > 4.6 ? Math.max(0.2, 1 - (phase - 4.6) / 0.8) : 1;
-        const alpha = textPhase * fadePhase;
+        const textPhase = Math.min(1, Math.max(0.42, (phase - 0.88) / 0.46));
+        const pulse = 0.78 + Math.sin(baseTime * 4.4 + index) * 0.12;
+        const alpha = Math.min(1, textPhase * pulse);
 
         if (alpha > 0.02) {
           ctx.save();
-          ctx.font = "900 18px Arial";
+          ctx.font = "900 19px Arial";
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
-          ctx.shadowBlur = 14;
-          ctx.shadowColor = `hsla(${hue}, 100%, 76%, ${0.85 * alpha})`;
-          ctx.fillStyle = `hsla(${hue}, 100%, 82%, ${alpha})`;
+          ctx.lineWidth = 2.2;
+          ctx.strokeStyle = `hsla(${hue}, 100%, 28%, ${0.72 * alpha})`;
+          ctx.shadowBlur = 18;
+          ctx.shadowColor = `hsla(${hue}, 100%, 76%, ${0.95 * alpha})`;
+          ctx.fillStyle = `hsla(${hue}, 100%, 84%, ${alpha})`;
+          ctx.strokeText(char === " " ? "" : char.toUpperCase(), targetX, targetY);
           ctx.fillText(char === " " ? "" : char.toUpperCase(), targetX, targetY);
           ctx.restore();
+        }
+
+        if (phase > 1.6 && phase < 3.8) {
+          const sparkCount = 2;
+          for (let spark = 0; spark < sparkCount; spark += 1) {
+            const sparkAngle = baseTime * 2.2 + index * 0.7 + spark * Math.PI;
+            const sparkRadius = 7 + spark * 4 + Math.sin(baseTime * 3 + index) * 2;
+            const sparkX = targetX + Math.cos(sparkAngle) * sparkRadius;
+            const sparkY = targetY + Math.sin(sparkAngle) * (sparkRadius * 0.52);
+            ctx.fillStyle = `hsla(${hue}, 100%, 86%, 0.82)`;
+            ctx.beginPath();
+            ctx.arc(sparkX, sparkY, 1.3, 0, Math.PI * 2);
+            ctx.fill();
+          }
         }
       });
 
