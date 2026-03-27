@@ -172,6 +172,15 @@ const baseProducts = [
   },
 ];
 
+const miniShowcaseItems = [
+  { id: "candy", emoji: "🍬", label: "Candy" },
+  { id: "lollipop", emoji: "🍭", label: "Lollipop" },
+  { id: "chocolate", emoji: "🍫", label: "Chocolate" },
+  { id: "teddy", emoji: "🧸", label: "Teddy" },
+  { id: "balloon", emoji: "🎈", label: "Balloon" },
+  { id: "gift", emoji: "🎁", label: "Gift" },
+];
+
 const price = (value) => `${new Intl.NumberFormat("ru-RU").format(value)} so'm`;
 const read = (key, fallback) => {
   try {
@@ -595,6 +604,24 @@ export default function App() {
             </div>
             <h2 className="mt-4 text-[30px] font-black leading-[1.05]">{t.heroTitle}</h2>
             <p className="mt-3 max-w-[18rem] text-sm leading-6 text-white/88">{t.heroText}</p>
+
+            <div className="mt-5 flex justify-end">
+              <div className="showcase-panel relative flex h-52 w-52 flex-wrap content-start gap-2 overflow-hidden rounded-[30px] p-4">
+                <div className="absolute inset-0 rounded-[30px] bg-white/10" />
+                {miniShowcaseItems.map((item, index) => (
+                  <div
+                    key={item.id}
+                    className="showcase-item relative flex h-[4.35rem] w-[4.35rem] flex-col items-center justify-center rounded-[22px] text-center"
+                    style={{ animationDelay: `${0.15 + index * 0.08}s` }}
+                  >
+                    <span className="text-2xl">{item.emoji}</span>
+                    <span className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/78">
+                      {item.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </section>
 
