@@ -1134,6 +1134,7 @@ export default function App() {
   );
   const t = i18n[lang];
   const cartButtonRef = useRef(null);
+  const logoTapRef = useRef({ count: 0, timer: null });
 
   useEffect(() => {
     const timer = window.setTimeout(() => setLoading(false), 700);
@@ -1232,6 +1233,27 @@ export default function App() {
   const admin =
     String(currentTelegramUser?.id ?? "").trim() === String(ADMIN_ID ?? "").trim() ||
     (typeof window !== "undefined" && ["localhost", "127.0.0.1", "192.168.1.5"].includes(window.location.hostname));
+
+  const triggerAdminEntrance = () => {
+    const state = logoTapRef.current;
+    state.count += 1;
+
+    if (state.timer) {
+      window.clearTimeout(state.timer);
+    }
+
+    if (state.count >= 5) {
+      state.count = 0;
+      setAdminOpen(true);
+      setToast(lang === "ru" ? "Панель администратора открыта" : "Admin panel ochildi");
+      return;
+    }
+
+    state.timer = window.setTimeout(() => {
+      logoTapRef.current.count = 0;
+      logoTapRef.current.timer = null;
+    }, 1800);
+  };
   const relatedProducts = useMemo(() => {
     if (!selected) return [];
     return products
@@ -1602,14 +1624,14 @@ export default function App() {
               <span className="header-salute-star header-salute-star-7" />
             </div>
             <div className="relative flex items-start justify-between gap-3">
-              <div>
+              <button type="button" onClick={triggerAdminEntrance} className="relative text-left">
                 <span className="logo-shine pointer-events-none absolute left-8 top-4 h-10 w-36" />
                 <img
                   src="/logo-transparent.png"
                   alt="Optimall Candy"
                   className="h-24 w-auto max-w-[15rem] object-contain"
                 />
-              </div>
+              </button>
               <div className="flex items-center gap-2">
                 <div className="flex rounded-full bg-white/80 p-1 shadow-card dark:bg-white/10">
                   {["uz", "ru"].map((code) => (
