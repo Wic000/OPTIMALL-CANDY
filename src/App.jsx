@@ -172,10 +172,15 @@ const baseProducts = [
   },
 ];
 
-const heroPreviewItems = [
-  { id: "sweet", icon: "S", label: "Shirinliklar" },
-  { id: "toy", icon: "T", label: "O'yinchoqlar" },
-  { id: "gift", icon: "24", label: "Sovg'alar" },
+const heroBubbleItems = [
+  { id: "b1", label: "🍬", size: "lg", top: "6%", left: "12%", delay: "0s", duration: "10s" },
+  { id: "b2", label: "🧸", size: "md", top: "18%", left: "56%", delay: "0.8s", duration: "12s" },
+  { id: "b3", label: "🍭", size: "sm", top: "28%", left: "28%", delay: "1.4s", duration: "9.5s" },
+  { id: "b4", label: "🎁", size: "lg", top: "38%", left: "66%", delay: "0.3s", duration: "11.5s" },
+  { id: "b5", label: "🍫", size: "md", top: "54%", left: "10%", delay: "1.1s", duration: "10.5s" },
+  { id: "b6", label: "🎈", size: "sm", top: "60%", left: "44%", delay: "0.6s", duration: "9s" },
+  { id: "b7", label: "🍪", size: "md", top: "72%", left: "72%", delay: "1.7s", duration: "12.5s" },
+  { id: "b8", label: "🪀", size: "sm", top: "78%", left: "24%", delay: "0.4s", duration: "8.8s" },
 ];
 
 const price = (value) => `${new Intl.NumberFormat("ru-RU").format(value)} so'm`;
@@ -603,19 +608,21 @@ export default function App() {
             <p className="mt-3 max-w-[18rem] text-sm leading-6 text-white/88">{t.heroText}</p>
 
             <div className="mt-5 flex justify-end">
-              <div className="hero-chip-stack relative h-36 w-48">
-                {heroPreviewItems.map((item, index) => (
+              <div className="hero-bubble-field relative h-48 w-48 overflow-hidden rounded-[32px]">
+                <div className="absolute inset-0 rounded-[32px] bg-white/8" />
+                {heroBubbleItems.map((item) => (
                   <div
                     key={item.id}
-                    className={`hero-preview-chip absolute right-0 flex w-40 items-center gap-3 rounded-[22px] px-4 py-3 text-white ${
-                      index === 0 ? "top-0 rotate-[-7deg]" : index === 1 ? "top-10 right-6 rotate-[4deg]" : "top-20 right-1 rotate-[-3deg]"
-                    }`}
-                    style={{ animationDelay: `${0.2 + index * 0.12}s` }}
+                    className={`hero-bubble hero-bubble-${item.size} absolute flex items-center justify-center rounded-full text-white`}
+                    style={{
+                      top: item.top,
+                      left: item.left,
+                      animationDelay: item.delay,
+                      animationDuration: item.duration,
+                    }}
                   >
-                    <span className="hero-preview-icon inline-flex h-10 w-10 items-center justify-center rounded-full text-sm font-black">
-                      {item.icon}
-                    </span>
-                    <span className="text-sm font-semibold tracking-[0.01em]">{item.label}</span>
+                    <span className="hero-bubble-glow absolute inset-[12%] rounded-full" />
+                    <span className="relative text-lg">{item.label}</span>
                   </div>
                 ))}
               </div>

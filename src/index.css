@@ -85,34 +85,46 @@ body {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
-.hero-preview-chip {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.3) 0%,
-    rgba(255, 255, 255, 0.14) 100%
-  );
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.2),
-    0 18px 30px rgba(60, 19, 49, 0.12);
-  backdrop-filter: blur(22px) saturate(160%);
-  opacity: 0;
-  transform: translateY(16px) scale(0.94);
-  animation: chipReveal 0.6s ease-out forwards, chipFloat 5.5s ease-in-out infinite;
-}
-
-.hero-preview-icon {
-  background: rgba(255, 255, 255, 0.22);
+.hero-bubble-field {
+  background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.16), transparent 48%);
   border: 1px solid rgba(255, 255, 255, 0.18);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 18px 30px rgba(60, 19, 49, 0.1);
+  backdrop-filter: blur(20px) saturate(150%);
 }
 
-.hero-preview-chip:nth-child(2) {
-  animation-duration: 0.6s, 6.2s;
+.hero-bubble {
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.14) 60%, rgba(255, 255, 255, 0.08) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    0 10px 24px rgba(41, 18, 35, 0.08);
+  backdrop-filter: blur(16px) saturate(160%);
+  opacity: 0;
+  transform: translate3d(0, 12px, 0) scale(0.94);
+  animation: bubbleReveal 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards, bubbleDrift ease-in-out infinite;
+  will-change: transform;
 }
 
-.hero-preview-chip:nth-child(3) {
-  animation-duration: 0.6s, 5.8s;
+.hero-bubble-sm {
+  width: 2.9rem;
+  height: 2.9rem;
+}
+
+.hero-bubble-md {
+  width: 3.7rem;
+  height: 3.7rem;
+}
+
+.hero-bubble-lg {
+  width: 4.5rem;
+  height: 4.5rem;
+}
+
+.hero-bubble-glow {
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.34), transparent 70%);
+  opacity: 0.75;
 }
 
 .scrollbar-none::-webkit-scrollbar {
@@ -284,25 +296,36 @@ body {
   }
 }
 
-@keyframes chipReveal {
+@keyframes bubbleReveal {
   0% {
     opacity: 0;
-    transform: translateY(16px) scale(0.94);
+    transform: translate3d(0, 12px, 0) scale(0.94);
   }
   100% {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translate3d(0, 0, 0) scale(1);
   }
 }
 
-@keyframes chipFloat {
+@keyframes bubbleDrift {
   0% {
-    transform: translateY(0);
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  25% {
+    opacity: 1;
+    transform: translate3d(-4px, -8px, 0) scale(1.03);
   }
   50% {
-    transform: translateY(-5px);
+    opacity: 1;
+    transform: translate3d(3px, -14px, 0) scale(0.98);
+  }
+  75% {
+    opacity: 1;
+    transform: translate3d(6px, -7px, 0) scale(1.02);
   }
   100% {
-    transform: translateY(0);
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
   }
 }
