@@ -297,6 +297,95 @@ function ProductEditor({ t, product, categories, onClose, onSave }) {
   );
 }
 
+function FloralBackground() {
+  return (
+    <div className="pointer-events-none fixed inset-0 overflow-hidden">
+      <svg
+        viewBox="0 0 430 932"
+        className="absolute inset-x-0 bottom-0 h-[72vh] w-full opacity-70 dark:opacity-85"
+        aria-hidden="true"
+      >
+        <g className="flower-grow-delayed origin-bottom">
+          <path
+            d="M215 878 C 198 812, 164 770, 118 726 C 87 696, 66 650, 58 610"
+            fill="none"
+            stroke="#35c7cf"
+            strokeWidth="2.6"
+            strokeLinecap="round"
+            className="flower-stem"
+          />
+          <path
+            d="M215 878 C 232 812, 266 770, 312 726 C 343 696, 364 650, 372 610"
+            fill="none"
+            stroke="#35c7cf"
+            strokeWidth="2.6"
+            strokeLinecap="round"
+            className="flower-stem"
+          />
+
+          <path
+            d="M150 754 C 130 744, 118 744, 104 756 C 120 774, 134 776, 154 764"
+            fill="#82e7de"
+            className="leaf-bloom"
+          />
+          <path
+            d="M280 754 C 300 744, 312 744, 326 756 C 310 774, 296 776, 276 764"
+            fill="#82e7de"
+            className="leaf-bloom"
+            style={{ animationDelay: "1s" }}
+          />
+          <path
+            d="M120 786 C 100 780, 88 782, 76 794 C 92 806, 108 808, 126 798"
+            fill="#82e7de"
+            className="leaf-bloom"
+            style={{ animationDelay: "1.15s" }}
+          />
+          <path
+            d="M310 786 C 330 780, 342 782, 354 794 C 338 806, 322 808, 304 798"
+            fill="#82e7de"
+            className="leaf-bloom"
+            style={{ animationDelay: "1.15s" }}
+          />
+
+          <g className="petal-bloom" style={{ transformOrigin: "112px 604px", animationDelay: "1.35s" }}>
+            <path d="M108 620 C 82 600, 78 572, 98 552 C 112 572, 118 594, 116 620" fill="#ffd4cb" />
+            <path d="M112 620 C 126 592, 126 566, 112 542 C 98 566, 98 592, 112 620" fill="#ffcfba" />
+            <path d="M116 620 C 140 600, 146 572, 126 552 C 112 572, 106 594, 108 620" fill="#ffe2da" />
+            <path d="M112 624 C 120 634, 122 646, 116 664 C 108 662, 102 648, 104 626" fill="#35c7cf" />
+            <circle cx="112" cy="552" r="6" fill="#ffb184" />
+          </g>
+
+          <g className="petal-bloom" style={{ transformOrigin: "318px 604px", animationDelay: "1.5s" }}>
+            <path d="M314 620 C 288 600, 284 572, 304 552 C 318 572, 324 594, 322 620" fill="#ffd4cb" />
+            <path d="M318 620 C 332 592, 332 566, 318 542 C 304 566, 304 592, 318 620" fill="#ffcfba" />
+            <path d="M322 620 C 346 600, 352 572, 332 552 C 318 572, 312 594, 314 620" fill="#ffe2da" />
+            <path d="M318 624 C 326 634, 328 646, 322 664 C 314 662, 308 648, 310 626" fill="#35c7cf" />
+            <circle cx="318" cy="552" r="6" fill="#ffb184" />
+          </g>
+
+          <path
+            d="M170 815 C 154 803, 150 790, 154 774"
+            fill="none"
+            stroke="#35c7cf"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            className="flower-accent"
+          />
+          <path
+            d="M260 815 C 276 803, 280 790, 276 774"
+            fill="none"
+            stroke="#35c7cf"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            className="flower-accent"
+            style={{ animationDelay: "1.2s" }}
+          />
+        </g>
+      </svg>
+    </div>
+  );
+}
+
 export default function App() {
   const [theme, setTheme] = useState(() => read(STORAGE.theme, "light"));
   const [lang, setLang] = useState(() => read(STORAGE.lang, "uz"));
@@ -455,6 +544,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen pb-36 text-candy-ink dark:text-white">
+      <FloralBackground />
       <div className="mx-auto flex min-h-screen max-w-md flex-col px-4 pb-6 pt-4">
         <header className="glass sticky top-0 z-20 rounded-[28px] border border-white/60 px-4 py-3 shadow-card dark:border-white/10">
           <div className="flex items-center justify-between gap-3">
