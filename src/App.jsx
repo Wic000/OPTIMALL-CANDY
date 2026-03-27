@@ -218,7 +218,7 @@ function AdminPanel({ t, products, categories, setEditing, setProducts, setCart,
   const [uz, setUz] = useState("");
   const [ru, setRu] = useState("");
   return (
-    <section className="mt-8 animate-rise rounded-[32px] bg-candy-ink px-4 py-5 text-white shadow-float">
+    <section className="glass-panel mt-8 animate-rise rounded-[32px] px-4 py-5 text-white shadow-float">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.24em] text-white/70">{t.adminHint}</p>
@@ -228,17 +228,17 @@ function AdminPanel({ t, products, categories, setEditing, setProducts, setCart,
           {t.addProduct}
         </button>
       </div>
-      <div className="mt-5 rounded-[26px] bg-white/10 p-4">
+      <div className="glass-pill mt-5 rounded-[26px] p-4">
         <p className="text-sm font-bold">{t.categories}</p>
         <div className="mt-3 grid grid-cols-2 gap-2">
-          <input value={uz} onChange={(e) => setUz(e.target.value)} placeholder="Uzbek" className="rounded-2xl border-0 bg-white/10 px-3 py-3 text-sm text-white placeholder:text-white/45" />
-          <input value={ru} onChange={(e) => setRu(e.target.value)} placeholder="Русский" className="rounded-2xl border-0 bg-white/10 px-3 py-3 text-sm text-white placeholder:text-white/45" />
+          <input value={uz} onChange={(e) => setUz(e.target.value)} placeholder="Uzbek" className="rounded-2xl border border-white/10 bg-white/10 px-3 py-3 text-sm text-white placeholder:text-white/45 backdrop-blur" />
+          <input value={ru} onChange={(e) => setRu(e.target.value)} placeholder="Русский" className="rounded-2xl border border-white/10 bg-white/10 px-3 py-3 text-sm text-white placeholder:text-white/45 backdrop-blur" />
         </div>
         <button type="button" onClick={() => { addCategory(uz, ru); setUz(""); setRu(""); }} className="mt-3 rounded-2xl bg-white px-4 py-3 text-sm font-bold text-candy-ink">{t.addCategory}</button>
       </div>
       <div className="mt-5 space-y-3">
         {products.map((product) => (
-          <div key={product.id} className="flex items-center gap-3 rounded-[24px] bg-white/10 p-3">
+          <div key={product.id} className="glass-pill flex items-center gap-3 rounded-[24px] p-3">
             <img src={product.image} alt={product.name} className="h-14 w-14 rounded-2xl object-cover" />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-bold">{product.name}</p>
@@ -259,7 +259,7 @@ function ProductEditor({ t, product, categories, onClose, onSave }) {
   if (!form) return null;
   return (
     <Modal onClose={onClose}>
-      <div className="rounded-[30px] bg-white p-4 text-candy-ink shadow-float dark:bg-candy-grape dark:text-white">
+      <div className="glass-panel rounded-[30px] p-4 text-candy-ink shadow-float dark:text-white">
         <h3 className="text-xl font-black">{form.id ? t.editProduct : t.addProduct}</h3>
         <div className="mt-4 space-y-3">
           <Field label={t.productName} value={form.name} onChange={(value) => setForm((current) => ({ ...current, name: value }))} />
@@ -584,11 +584,12 @@ export default function App() {
           </div>
         </header>
 
-        <section className="relative mt-4 overflow-hidden rounded-[32px] bg-gradient-to-br from-candy-pink via-candy-coral to-candy-peach px-5 py-6 text-white shadow-float">
+        <section className="glass-panel relative mt-4 overflow-hidden rounded-[32px] px-5 py-6 text-white shadow-float">
+          <div className="absolute inset-0 bg-gradient-to-br from-candy-pink/70 via-candy-coral/55 to-candy-peach/45" />
           <div className="absolute -right-10 -top-14 h-32 w-32 rounded-full bg-white/20 blur-xl" />
           <div className="absolute -bottom-12 left-0 h-28 w-28 rounded-full bg-candy-plum/30 blur-xl" />
           <div className="relative">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/18 px-3 py-1 text-xs font-semibold">
+            <div className="glass-pill inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold">
               <span className="h-2 w-2 rounded-full bg-white" />
               {t.heroBadge}
             </div>
@@ -603,7 +604,7 @@ export default function App() {
               <p className="text-xs font-medium uppercase tracking-[0.24em] text-candy-pink/80">{t.catalog}</p>
               <h2 className="mt-1 text-2xl font-bold">{t.buyNow}</h2>
             </div>
-            <div className="rounded-full bg-white/70 px-3 py-1 text-xs font-semibold shadow-card dark:bg-white/10">{visibleProducts.length}</div>
+            <div className="glass-pill rounded-full px-3 py-1 text-xs font-semibold shadow-card">{visibleProducts.length}</div>
           </div>
 
           <div className="scrollbar-none flex gap-2 overflow-x-auto pb-1">
@@ -612,7 +613,7 @@ export default function App() {
                 key={category.id}
                 type="button"
                 onClick={() => setFilter(category.id)}
-                className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold ${filter === category.id ? "bg-candy-ink text-white shadow-card dark:bg-white dark:text-candy-ink" : "bg-white/80 text-candy-ink/80 shadow-card dark:bg-white/10 dark:text-white/80"}`}
+                className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold ${filter === category.id ? "bg-candy-ink/90 text-white shadow-card backdrop-blur dark:bg-white dark:text-candy-ink" : "glass-pill text-candy-ink/80 shadow-card dark:text-white/80"}`}
               >
                 {category.name?.[lang] ?? category.id}
               </button>
@@ -624,11 +625,11 @@ export default function App() {
               <p className="mb-3 text-sm font-medium text-candy-ink/60 dark:text-white/60">{t.skeletonTitle}</p>
               <div className="grid grid-cols-2 gap-3">
                 {Array.from({ length: 4 }).map((_, index) => (
-                  <div key={index} className="animate-pulseSoft rounded-[28px] bg-white/80 p-3 shadow-card dark:bg-white/10">
-                    <div className="h-28 rounded-2xl bg-white/70 dark:bg-white/10" />
-                    <div className="mt-3 h-4 w-20 rounded-full bg-white/70 dark:bg-white/10" />
-                    <div className="mt-2 h-3 w-16 rounded-full bg-white/70 dark:bg-white/10" />
-                    <div className="mt-4 h-10 rounded-2xl bg-white/70 dark:bg-white/10" />
+                  <div key={index} className="glass-panel animate-pulseSoft rounded-[28px] p-3 shadow-card">
+                    <div className="h-28 rounded-2xl bg-white/45 dark:bg-white/10" />
+                    <div className="mt-3 h-4 w-20 rounded-full bg-white/45 dark:bg-white/10" />
+                    <div className="mt-2 h-3 w-16 rounded-full bg-white/45 dark:bg-white/10" />
+                    <div className="mt-4 h-10 rounded-2xl bg-white/45 dark:bg-white/10" />
                   </div>
                 ))}
               </div>
@@ -636,7 +637,7 @@ export default function App() {
           ) : (
             <div className="mt-4 grid grid-cols-2 gap-3">
               {visibleProducts.map((product, index) => (
-                <article key={product.id} className="animate-rise rounded-[28px] bg-white/82 p-3 shadow-card dark:bg-white/10" style={{ animationDelay: `${index * 60}ms` }}>
+                <article key={product.id} className="glass-panel animate-rise rounded-[28px] p-3 shadow-card" style={{ animationDelay: `${index * 60}ms` }}>
                   <div className="relative overflow-hidden rounded-[24px]">
                     <img src={product.image} alt={product.name} className="h-32 w-full object-cover" loading="lazy" />
                     {product.badge ? <span className="absolute left-3 top-3 rounded-full bg-candy-ink px-2.5 py-1 text-[10px] font-bold text-white dark:bg-white dark:text-candy-ink">{product.badge}</span> : null}
@@ -681,7 +682,7 @@ export default function App() {
 
       {selected ? (
         <Modal onClose={() => setSelected(null)}>
-          <div className="overflow-hidden rounded-[30px] bg-white p-4 text-candy-ink shadow-float dark:bg-candy-grape dark:text-white">
+          <div className="glass-panel overflow-hidden rounded-[30px] p-4 text-candy-ink shadow-float dark:text-white">
             <img src={selected.image} alt={selected.name} className="h-52 w-full rounded-[24px] object-cover" />
             <div className="mt-4">
               <div className="flex items-center justify-between gap-3">
@@ -698,7 +699,7 @@ export default function App() {
 
       {cartOpen ? (
         <Modal onClose={() => setCartOpen(false)} bottom>
-          <div className="rounded-t-[34px] bg-white p-4 text-candy-ink shadow-float dark:bg-candy-grape dark:text-white">
+          <div className="glass-panel rounded-t-[34px] p-4 text-candy-ink shadow-float dark:text-white">
             <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-candy-ink/12 dark:bg-white/18" />
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-black">{t.cart}</h3>
@@ -716,7 +717,7 @@ export default function App() {
                   const product = products.find((entry) => entry.id === item.id);
                   if (!product) return null;
                   return (
-                    <div key={item.id} className="flex items-center gap-3 rounded-[24px] bg-candy-ink/[0.04] p-3 dark:bg-white/5">
+                    <div key={item.id} className="glass-pill flex items-center gap-3 rounded-[24px] p-3">
                       <img src={product.image} alt={product.name} className="h-16 w-16 rounded-2xl object-cover" />
                       <div className="min-w-0 flex-1">
                         <h4 className="truncate text-sm font-bold">{product.name}</h4>
@@ -731,7 +732,7 @@ export default function App() {
                     </div>
                   );
                 })}
-                <div className="rounded-[24px] bg-candy-ink px-4 py-4 text-white dark:bg-white dark:text-candy-ink">
+                <div className="glass-pill rounded-[24px] px-4 py-4 text-white">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">{t.total}</span>
                     <span className="text-lg font-black">{price(totalPrice)}</span>
@@ -746,7 +747,7 @@ export default function App() {
 
       {checkoutOpen ? (
         <Modal onClose={() => setCheckoutOpen(false)}>
-          <div className="rounded-[30px] bg-white p-4 text-candy-ink shadow-float dark:bg-candy-grape dark:text-white">
+          <div className="glass-panel rounded-[30px] p-4 text-candy-ink shadow-float dark:text-white">
             <h3 className="text-xl font-black">{t.checkout}</h3>
             <div className="mt-4 space-y-3">
               <Field label={t.phone} value={checkout.phone} onChange={(value) => setCheckout((current) => ({ ...current, phone: value }))} placeholder="+998 90 123 45 67" />
@@ -767,7 +768,7 @@ export default function App() {
                 </div>
               ) : null}
             </div>
-            <div className="mt-5 rounded-[24px] bg-candy-ink/[0.05] px-4 py-4 dark:bg-white/6">
+            <div className="glass-pill mt-5 rounded-[24px] px-4 py-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">{t.total}</span>
                 <span className="text-lg font-black">{price(totalPrice)}</span>
