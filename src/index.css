@@ -57,9 +57,9 @@ body {
 }
 
 .flower-stem {
-  stroke-dasharray: 420;
-  stroke-dashoffset: 420;
-  animation: stemGrow 1.8s ease-out forwards;
+  stroke-dasharray: 620;
+  stroke-dashoffset: 620;
+  animation: stemGrow 2.6s ease-out forwards;
 }
 
 .flower-grow-delayed {
@@ -68,32 +68,55 @@ body {
 
 .leaf-bloom,
 .petal-bloom,
-.flower-accent {
+.flower-accent,
+.flower-sway-left,
+.flower-sway-right {
   opacity: 0;
   transform-box: fill-box;
 }
 
 .leaf-bloom {
   transform-origin: center;
-  animation: leafBloom 0.7s ease-out forwards;
-  animation-delay: 0.9s;
+  animation: leafBloom 0.8s ease-out forwards;
+  animation-delay: 1.4s;
 }
 
 .petal-bloom {
-  animation: petalBloom 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  animation: petalBloom 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
 .flower-accent {
   stroke-dasharray: 80;
   stroke-dashoffset: 80;
   animation: accentDraw 0.8s ease-out forwards;
-  animation-delay: 1.1s;
+  animation-delay: 1.8s;
+}
+
+.flower-sway-left,
+.flower-sway-right {
+  animation-fill-mode: forwards;
+}
+
+.flower-sway-left {
+  transform-origin: 215px 890px;
+  animation:
+    flowerReveal 0.2s linear forwards,
+    swayLeft 5.4s ease-in-out infinite;
+  animation-delay: 1.9s, 2.3s;
+}
+
+.flower-sway-right {
+  transform-origin: 215px 890px;
+  animation:
+    flowerReveal 0.2s linear forwards,
+    swayRight 5.9s ease-in-out infinite;
+  animation-delay: 2s, 2.45s;
 }
 
 @keyframes stemGrow {
   0% {
     opacity: 0.15;
-    stroke-dashoffset: 420;
+    stroke-dashoffset: 620;
   }
   100% {
     opacity: 1;
@@ -135,5 +158,60 @@ body {
   100% {
     opacity: 1;
     stroke-dashoffset: 0;
+  }
+}
+
+@keyframes flowerReveal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes swayLeft {
+  0% {
+    opacity: 1;
+    transform: rotate(0deg) translateY(0);
+  }
+  25% {
+    opacity: 1;
+    transform: rotate(-2.8deg) translateY(-2px);
+  }
+  50% {
+    opacity: 1;
+    transform: rotate(0.9deg) translateY(0);
+  }
+  75% {
+    opacity: 1;
+    transform: rotate(-2.1deg) translateY(-1px);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(0deg) translateY(0);
+  }
+}
+
+@keyframes swayRight {
+  0% {
+    opacity: 1;
+    transform: rotate(0deg) translateY(0);
+  }
+  25% {
+    opacity: 1;
+    transform: rotate(2.8deg) translateY(-2px);
+  }
+  50% {
+    opacity: 1;
+    transform: rotate(-0.9deg) translateY(0);
+  }
+  75% {
+    opacity: 1;
+    transform: rotate(2.2deg) translateY(-1px);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(0deg) translateY(0);
   }
 }

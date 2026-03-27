@@ -302,12 +302,12 @@ function FloralBackground() {
     <div className="pointer-events-none fixed inset-0 overflow-hidden">
       <svg
         viewBox="0 0 430 932"
-        className="absolute inset-x-0 bottom-0 h-[72vh] w-full opacity-70 dark:opacity-85"
+        className="absolute inset-x-0 bottom-0 h-[88vh] w-full opacity-70 dark:opacity-85"
         aria-hidden="true"
       >
         <g className="flower-grow-delayed origin-bottom">
           <path
-            d="M215 878 C 198 812, 164 770, 118 726 C 87 696, 66 650, 58 610"
+            d="M215 890 C 196 804, 160 726, 112 636 C 86 586, 66 486, 70 366"
             fill="none"
             stroke="#35c7cf"
             strokeWidth="2.6"
@@ -315,7 +315,7 @@ function FloralBackground() {
             className="flower-stem"
           />
           <path
-            d="M215 878 C 232 812, 266 770, 312 726 C 343 696, 364 650, 372 610"
+            d="M215 890 C 234 804, 270 726, 318 636 C 344 586, 364 486, 360 366"
             fill="none"
             stroke="#35c7cf"
             strokeWidth="2.6"
@@ -324,47 +324,51 @@ function FloralBackground() {
           />
 
           <path
-            d="M150 754 C 130 744, 118 744, 104 756 C 120 774, 134 776, 154 764"
+            d="M156 720 C 132 708, 118 708, 100 724 C 120 744, 138 746, 160 732"
             fill="#82e7de"
             className="leaf-bloom"
           />
           <path
-            d="M280 754 C 300 744, 312 744, 326 756 C 310 774, 296 776, 276 764"
+            d="M274 720 C 298 708, 312 708, 330 724 C 310 744, 292 746, 270 732"
             fill="#82e7de"
             className="leaf-bloom"
             style={{ animationDelay: "1s" }}
           />
           <path
-            d="M120 786 C 100 780, 88 782, 76 794 C 92 806, 108 808, 126 798"
+            d="M122 784 C 94 776, 78 778, 62 794 C 84 812, 104 814, 128 800"
             fill="#82e7de"
             className="leaf-bloom"
             style={{ animationDelay: "1.15s" }}
           />
           <path
-            d="M310 786 C 330 780, 342 782, 354 794 C 338 806, 322 808, 304 798"
+            d="M308 784 C 336 776, 352 778, 368 794 C 346 812, 326 814, 302 800"
             fill="#82e7de"
             className="leaf-bloom"
             style={{ animationDelay: "1.15s" }}
           />
 
-          <g className="petal-bloom" style={{ transformOrigin: "112px 604px", animationDelay: "1.35s" }}>
-            <path d="M108 620 C 82 600, 78 572, 98 552 C 112 572, 118 594, 116 620" fill="#ffd4cb" />
-            <path d="M112 620 C 126 592, 126 566, 112 542 C 98 566, 98 592, 112 620" fill="#ffcfba" />
-            <path d="M116 620 C 140 600, 146 572, 126 552 C 112 572, 106 594, 108 620" fill="#ffe2da" />
-            <path d="M112 624 C 120 634, 122 646, 116 664 C 108 662, 102 648, 104 626" fill="#35c7cf" />
-            <circle cx="112" cy="552" r="6" fill="#ffb184" />
+          <g className="flower-sway-left">
+            <g className="petal-bloom" style={{ transformOrigin: "82px 366px", animationDelay: "1.35s" }}>
+              <path d="M76 402 C 46 376, 40 336, 64 308 C 82 334, 88 364, 84 402" fill="#ffd4cb" />
+              <path d="M82 402 C 98 364, 98 328, 82 294 C 66 328, 66 364, 82 402" fill="#ffcfba" />
+              <path d="M88 402 C 116 376, 122 336, 98 308 C 82 334, 76 364, 80 402" fill="#ffe2da" />
+              <path d="M82 404 C 92 420, 94 438, 88 466 C 78 462, 72 440, 74 408" fill="#35c7cf" />
+              <circle cx="82" cy="308" r="7" fill="#ffb184" />
+            </g>
           </g>
 
-          <g className="petal-bloom" style={{ transformOrigin: "318px 604px", animationDelay: "1.5s" }}>
-            <path d="M314 620 C 288 600, 284 572, 304 552 C 318 572, 324 594, 322 620" fill="#ffd4cb" />
-            <path d="M318 620 C 332 592, 332 566, 318 542 C 304 566, 304 592, 318 620" fill="#ffcfba" />
-            <path d="M322 620 C 346 600, 352 572, 332 552 C 318 572, 312 594, 314 620" fill="#ffe2da" />
-            <path d="M318 624 C 326 634, 328 646, 322 664 C 314 662, 308 648, 310 626" fill="#35c7cf" />
-            <circle cx="318" cy="552" r="6" fill="#ffb184" />
+          <g className="flower-sway-right">
+            <g className="petal-bloom" style={{ transformOrigin: "348px 366px", animationDelay: "1.5s" }}>
+              <path d="M342 402 C 312 376, 306 336, 330 308 C 348 334, 354 364, 350 402" fill="#ffd4cb" />
+              <path d="M348 402 C 364 364, 364 328, 348 294 C 332 328, 332 364, 348 402" fill="#ffcfba" />
+              <path d="M354 402 C 382 376, 388 336, 364 308 C 348 334, 342 364, 346 402" fill="#ffe2da" />
+              <path d="M348 404 C 358 420, 360 438, 354 466 C 344 462, 338 440, 340 408" fill="#35c7cf" />
+              <circle cx="348" cy="308" r="7" fill="#ffb184" />
+            </g>
           </g>
 
           <path
-            d="M170 815 C 154 803, 150 790, 154 774"
+            d="M168 816 C 146 800, 142 780, 150 748"
             fill="none"
             stroke="#35c7cf"
             strokeWidth="1.8"
@@ -372,7 +376,7 @@ function FloralBackground() {
             className="flower-accent"
           />
           <path
-            d="M260 815 C 276 803, 280 790, 276 774"
+            d="M262 816 C 284 800, 288 780, 280 748"
             fill="none"
             stroke="#35c7cf"
             strokeWidth="1.8"
