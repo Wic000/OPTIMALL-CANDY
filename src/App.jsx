@@ -910,10 +910,15 @@ function ProductEditor({ t, product, categories, onClose, onSave }) {
 }
 
 function FloralBackground() {
+  const lightModeButterflies =
+    typeof window !== "undefined" && !window.Telegram?.WebApp
+      ? backgroundButterflies.slice(0, 6)
+      : backgroundButterflies;
+
   return (
     <div className="pointer-events-none fixed inset-0 overflow-hidden">
       <div className="butterfly-scene" aria-hidden="true">
-        {backgroundButterflies.map((butterfly) => (
+        {lightModeButterflies.map((butterfly) => (
           <div
             key={butterfly.id}
             className={`butterfly butterfly-${butterfly.mode || "fly"}`}
@@ -1633,6 +1638,15 @@ export default function App() {
               </div>
             </div>
             <div className="relative mt-3 flex items-center justify-end gap-3">
+              {admin ? (
+                <button
+                  type="button"
+                  onClick={() => setAdminOpen(true)}
+                  className="glass-pill rounded-full px-3 py-2 text-xs font-bold text-candy-ink shadow-card dark:text-white"
+                >
+                  {t.adminPanel}
+                </button>
+              ) : null}
               <FireworkName user={user} lang={lang} />
               <div className="glass-pill flex h-11 w-11 items-center justify-center rounded-full p-0.5">
                 <UserAvatar user={user} />
@@ -1783,18 +1797,6 @@ export default function App() {
             <p className="mt-3 max-w-[18rem] text-sm leading-6 text-white/88">{t.heroText}</p>
           </div>
         </section>
-
-        {admin ? (
-          <AdminPanel
-            t={t}
-            products={products}
-            categories={categories.filter((item) => item.id !== "all")}
-            setEditing={setEditing}
-            onDeleteProduct={deleteProduct}
-            addCategory={addCategory}
-            deleteCategory={deleteCategory}
-          />
-        ) : null}
 
         <div className="mt-auto px-2 pb-4 pt-8 text-center">
           <div className="inline-flex items-center rounded-full border border-white/14 bg-white/10 px-3 py-1.5 text-[11px] font-semibold tracking-[0.12em] text-candy-ink/55 backdrop-blur dark:text-white/55">
@@ -2085,11 +2087,13 @@ function FireworkName({ user, lang }) {
   const fallback = lang === "ru" ? "Гость" : "Mehmon";
   const rawName = user?.first_name?.trim() || user?.username?.trim() || fallback;
   const displayName = rawName.slice(0, 12);
+  const liteMode = typeof window !== "undefined" && !window.Telegram?.WebApp;
   const canvasRef = useRef(null);
   const frameRef = useRef(0);
   const widthRem = Math.min(10.8, Math.max(6.2, displayName.length * 0.62 + 2.6));
 
   useEffect(() => {
+    if (liteMode) return undefined;
     const canvas = canvasRef.current;
     if (!canvas) return undefined;
 
@@ -2208,7 +2212,15 @@ function FireworkName({ user, lang }) {
       window.cancelAnimationFrame(frameRef.current);
       window.removeEventListener("resize", resizeHandler);
     };
-  }, [displayName]);
+  }, [displayName, liteMode]);
+
+  if (liteMode) {
+    return (
+      <div className="firework-name flex items-center justify-center px-4 text-sm font-black text-candy-ink dark:text-white" aria-label={displayName} style={{ width: `${widthRem}rem` }}>
+        {displayName}
+      </div>
+    );
+  }
 
   return (
     <div className="firework-name" aria-label={displayName} style={{ width: `${widthRem}rem` }}>
