@@ -7,7 +7,7 @@ const STORAGE = {
   cart: "optimall-candy-cart",
   theme: "optimall-candy-theme",
   lang: "optimall-candy-lang",
-  products: "optimall-candy-products",
+  productPreviews: "optimall-candy-product-previews",
   categories: "optimall-candy-categories",
   orderHistory: "optimall-candy-order-history",
 };
@@ -328,6 +328,18 @@ const compactProductsForStorage = (products) =>
     image: product.image || images?.[0] || "",
   }));
 
+const compactProductPreviewsForStorage = (products) =>
+  products.map((product) => ({
+    id: product.id,
+    name: product.name,
+    category: product.category,
+    price: product.price,
+    description: product.description,
+    badge: product.badge,
+    image: product.image || product.images?.[0] || "",
+    images: product.image ? [product.image] : [],
+  }));
+
 const categoryFromRow = (row) => ({
   id: row.id,
   name: {
@@ -357,6 +369,18 @@ const productFromRow = (row) =>
     badge: row.badge,
     image: row.image,
     images: Array.isArray(row.images) ? row.images : [],
+  });
+
+const productPreviewFromRow = (row) =>
+  ensureProductGallery({
+    id: row.id,
+    name: row.name,
+    category: row.category,
+    price: row.price,
+    description: row.description,
+    badge: row.badge,
+    image: row.image,
+    images: row.image ? [row.image] : [],
   });
 
 const randomBubbleMotion = () => ({
@@ -477,6 +501,39 @@ const toDataUrl = (file, maxSide = 1080, quality = 0.82) =>
     };
     reader.onerror = reject;
     reader.readAsDataURL(file);
+  });
+
+const resizeDataUrl = (source, maxSide = 420, quality = 0.72) =>
+  new Promise((resolve) => {
+    if (!source) {
+      resolve("");
+      return;
+    }
+
+    const image = new Image();
+    image.onload = () => {
+      const longestSide = Math.max(image.width, image.height);
+      const scale = longestSide > maxSide ? maxSide / longestSide : 1;
+      const width = Math.max(1, Math.round(image.width * scale));
+      const height = Math.max(1, Math.round(image.height * scale));
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext("2d");
+
+      if (!context) {
+        resolve(source);
+        return;
+      }
+
+      context.imageSmoothingEnabled = true;
+      context.imageSmoothingQuality = "high";
+      context.drawImage(image, 0, 0, width, height);
+      const webp = canvas.toDataURL("image/webp", quality);
+      resolve(webp.startsWith("data:image/webp") ? webp : source);
+    };
+    image.onerror = () => resolve(source);
+    image.src = source;
   });
 
 function Modal({ children, onClose, bottom = false }) {
@@ -1154,7 +1211,7 @@ export default function App() {
   const [theme, setTheme] = useState(() => read(STORAGE.theme, "light"));
   const [lang, setLang] = useState(() => read(STORAGE.lang, "uz"));
   const [products, setProducts] = useState(() =>
-    read(STORAGE.products, createBaseProducts).map(ensureProductGallery),
+    read(STORAGE.productPreviews, hasSupabase ? [] : createBaseProducts).map(ensureProductGallery),
   );
   const [categories, setCategories] = useState(() => read(STORAGE.categories, baseCategories));
   const [cart, setCart] = useState(() => read(STORAGE.cart, []));
@@ -1182,6 +1239,7 @@ export default function App() {
   const t = i18n[lang];
   const cartButtonRef = useRef(null);
   const logoTapRef = useRef({ count: 0, timer: null });
+  const previewMigrationRef = useRef(false);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setLoading(false), 260);
@@ -1216,7 +1274,7 @@ export default function App() {
     write(STORAGE.theme, theme);
   }, [theme]);
   useEffect(() => write(STORAGE.lang, lang), [lang]);
-  useEffect(() => write(STORAGE.products, compactProductsForStorage(products)), [products]);
+  useEffect(() => write(STORAGE.productPreviews, compactProductPreviewsForStorage(products)), [products]);
   useEffect(() => write(STORAGE.categories, categories), [categories]);
   useEffect(() => write(STORAGE.cart, cart), [cart]);
   useEffect(() => {
@@ -1227,7 +1285,10 @@ export default function App() {
     const syncFromSupabase = async () => {
       const [{ data: categoryRows, error: categoryError }, { data: productRows, error: productError }] = await Promise.all([
         supabase.from("categories").select("*").order("created_at", { ascending: true }),
-        supabase.from("products").select("*").order("created_at", { ascending: false }),
+        supabase
+          .from("products")
+          .select("id,name,category,price,description,badge,image,created_at")
+          .order("created_at", { ascending: false }),
       ]);
 
       if (!alive) return;
@@ -1237,7 +1298,22 @@ export default function App() {
       }
 
       if (!productError && Array.isArray(productRows) && productRows.length) {
-        setProducts(productRows.map(productFromRow));
+        setProducts(productRows.map(productPreviewFromRow));
+
+        if (!previewMigrationRef.current) {
+          previewMigrationRef.current = true;
+          void (async () => {
+            for (const row of productRows) {
+              if (typeof row.image !== "string" || row.image.length < 250000) continue;
+              const optimizedPreview = await resizeDataUrl(row.image, 420, 0.72);
+              if (!optimizedPreview || optimizedPreview === row.image) continue;
+              await supabase
+                .from("products")
+                .update({ image: optimizedPreview })
+                .eq("id", row.id);
+            }
+          })();
+        }
       }
     };
 
@@ -1278,6 +1354,13 @@ export default function App() {
     const timer = window.setTimeout(() => setToast(""), 2400);
     return () => clearTimeout(timer);
   }, [toast]);
+  useEffect(() => {
+    try {
+      localStorage.removeItem("optimall-candy-products");
+    } catch {
+      // ignore cleanup failure
+    }
+  }, []);
   useEffect(() => {
     const historyUserId = user?.id ? String(user.id) : "";
     setOrderHistory(read(orderHistoryKey(historyUserId), []));
@@ -1341,7 +1424,7 @@ export default function App() {
       .slice(0, 4);
   }, [products, selected]);
 
-  const openProduct = (product, originElement) => {
+  const openProduct = async (product, originElement) => {
     if (originElement) {
       const rect = originElement.getBoundingClientRect();
       setSelectedOrigin({
@@ -1353,6 +1436,23 @@ export default function App() {
       setSelectedOrigin(null);
     }
     setSelected(product);
+
+    if (!hasSupabase || !supabase) return;
+    if (Array.isArray(product.images) && product.images.length > 1) return;
+
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("id", product.id)
+      .single();
+
+    if (error || !data) return;
+
+    const fullProduct = productFromRow(data);
+    setProducts((current) =>
+      current.map((item) => (item.id === fullProduct.id ? { ...item, images: fullProduct.images, image: fullProduct.image } : item)),
+    );
+    setSelected((current) => (current?.id === fullProduct.id ? fullProduct : current));
   };
 
   const animateFlyToCart = (image, sourceElement) => {
@@ -1562,11 +1662,12 @@ export default function App() {
             ["#76b3ff", "#8ce4ff", "#ffe3f1"],
             ["#ff7fa3", "#ffbf90", "#fff7d4"],
           ]);
+    const previewImage = await resizeDataUrl(form.image || gallery[0] || "", 420, 0.72);
     const payload = {
       id: form.id || slug(form.name),
       name: form.name,
       category: form.category,
-      image: form.image || gallery[0] || svgData(form.name, "#ff7aa8", "#8d76ff", "#fff6d2"),
+      image: previewImage || form.image || gallery[0] || svgData(form.name, "#ff7aa8", "#8d76ff", "#fff6d2"),
       images: gallery,
       price: Number(form.price),
       description: form.description,
