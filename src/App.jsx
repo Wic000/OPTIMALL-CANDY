@@ -445,10 +445,36 @@ const getTelegramUser = () => {
 };
 const slug = (v) => v.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
 const getErrorMessage = (error, fallback) => error?.message || error?.details || fallback;
-const toDataUrl = (file) =>
+const toDataUrl = (file, maxSide = 1080, quality = 0.82) =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
+    reader.onload = () => {
+      const image = new Image();
+      image.onload = () => {
+        const longestSide = Math.max(image.width, image.height);
+        const scale = longestSide > maxSide ? maxSide / longestSide : 1;
+        const width = Math.max(1, Math.round(image.width * scale));
+        const height = Math.max(1, Math.round(image.height * scale));
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext("2d");
+
+        if (!context) {
+          resolve(String(reader.result));
+          return;
+        }
+
+        context.imageSmoothingEnabled = true;
+        context.imageSmoothingQuality = "high";
+        context.drawImage(image, 0, 0, width, height);
+
+        const webp = canvas.toDataURL("image/webp", quality);
+        resolve(webp.startsWith("data:image/webp") ? webp : String(reader.result));
+      };
+      image.onerror = () => resolve(String(reader.result));
+      image.src = String(reader.result);
+    };
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
@@ -642,6 +668,9 @@ function ZoomableGallery({ product }) {
           src={images[activeImage]}
           alt={product.name}
           className="product-zoom-image h-60 w-full object-cover"
+          loading="eager"
+          fetchPriority="high"
+          decoding="async"
           style={{ transform: `translate3d(${translate.x}px, ${translate.y}px, 0) scale(${scale})` }}
         />
         <button
@@ -666,7 +695,7 @@ function ZoomableGallery({ product }) {
             }}
             className={`overflow-hidden rounded-[18px] border ${activeImage === index ? "border-candy-pink shadow-card" : "border-white/20"}`}
           >
-            <img src={image} alt={`${product.name} ${index + 1}`} className="h-16 w-full object-cover" />
+            <img src={image} alt={`${product.name} ${index + 1}`} className="h-16 w-full object-cover" loading="lazy" decoding="async" />
           </button>
         ))}
       </div>
@@ -1833,7 +1862,14 @@ export default function App() {
                   style={{ animationDelay: `${index * 60}ms` }}
                 >
                   <div className="relative overflow-hidden rounded-[24px]">
-                    <img src={product.image} alt={product.name} className="h-32 w-full object-cover" loading="lazy" />
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="h-32 w-full object-cover"
+                      loading={index < 4 ? "eager" : "lazy"}
+                      fetchPriority={index < 2 ? "high" : "auto"}
+                      decoding="async"
+                    />
                     {product.badge ? <span className={`badge-premium absolute left-3 top-3 rounded-full px-2.5 py-1 text-[10px] font-bold ${product.badge === "HIT" ? "badge-hit" : "badge-new"}`}>{product.badge}</span> : null}
                     <span className="glass-pill absolute bottom-3 right-3 rounded-full px-2.5 py-1 text-[10px] font-semibold text-white">
                       4 ta rasm
