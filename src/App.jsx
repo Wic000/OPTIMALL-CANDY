@@ -237,18 +237,13 @@ const bubbleArt = (kind, from, to) =>
     </svg>
   `)}`;
 
-const baseProducts = [
+const createBaseProducts = () => [
   {
     id: "sweet-box",
     name: "Sweet Box Berry",
     category: "Shirinliklar",
     image: svgData("Berry Box", "#ff7aa8", "#ffb97e", "#ffe0ec"),
-    images: galleryFromSeed("Berry Box", [
-      ["#ff7aa8", "#ffb97e", "#ffe0ec"],
-      ["#ff8fb6", "#ffd07a", "#fff4d9"],
-      ["#ff6c9d", "#ffb2c8", "#fff0f4"],
-      ["#ff9d84", "#ffc16c", "#fff1de"],
-    ]),
+    images: [],
     price: 79000,
     description: "Premium sovg'a qutisi, rang-barang konfetlar va berry ta'mlari bilan.",
     badge: "NEW",
@@ -258,12 +253,7 @@ const baseProducts = [
     name: "Marshmallow Cloud",
     category: "Shirinliklar",
     image: svgData("Cloud", "#8d76ff", "#ff89b3", "#fff8cf"),
-    images: galleryFromSeed("Cloud", [
-      ["#8d76ff", "#ff89b3", "#fff8cf"],
-      ["#6ca4ff", "#96e5ff", "#fff8cf"],
-      ["#a088ff", "#ffc0dd", "#fff2cf"],
-      ["#7f82ff", "#ff9fc5", "#ffeccb"],
-    ]),
+    images: [],
     price: 42000,
     description: "Yumshoq marshmallow to'plami, choy va sovg'a uchun mos.",
     badge: "HIT",
@@ -273,12 +263,7 @@ const baseProducts = [
     name: "Joy Bear",
     category: "O'yinchoqlar",
     image: svgData("Joy Bear", "#ff986f", "#ffc977", "#fff6d2"),
-    images: galleryFromSeed("Joy Bear", [
-      ["#ff986f", "#ffc977", "#fff6d2"],
-      ["#ffb57b", "#ffd885", "#fff4de"],
-      ["#e58a68", "#ffc7a1", "#ffeed9"],
-      ["#ffa870", "#ffd066", "#fff7d4"],
-    ]),
+    images: [],
     price: 119000,
     description: "Yumshoq ayiqcha va sovg'aga tayyor qadoq.",
     badge: "HIT",
@@ -288,27 +273,18 @@ const baseProducts = [
     name: "Magic Pop It",
     category: "O'yinchoqlar",
     image: svgData("Pop It", "#5f70ff", "#75d7ff", "#ffd6e7"),
-    images: galleryFromSeed("Pop It", [
-      ["#5f70ff", "#75d7ff", "#ffd6e7"],
-      ["#7f67ff", "#ff94d9", "#ffe1a6"],
-      ["#56a0ff", "#93ebff", "#ffd8f0"],
-      ["#5862ff", "#9fa3ff", "#ffe5a8"],
-    ]),
+    images: [],
     price: 36000,
     description: "Stress relief uchun rangli pop-it o'yinchoq.",
     badge: "",
   },
 ];
 
-const heroBubbleItems = [
+const createHeroBubbleItems = () => [
   { id: "b1", image: bubbleArt("candy", "#ff8fb6", "#ffc186"), size: "lg", top: "6%", left: "12%", delay: "0s", duration: "10s" },
   { id: "b2", image: bubbleArt("bear", "#ffb287", "#ffd88d"), size: "md", top: "18%", left: "56%", delay: "0.8s", duration: "12s" },
   { id: "b3", image: bubbleArt("lollipop", "#87a0ff", "#ffc8e4"), size: "sm", top: "28%", left: "28%", delay: "1.4s", duration: "9.5s" },
   { id: "b4", image: bubbleArt("gift", "#7adfff", "#8b83ff"), size: "lg", top: "38%", left: "66%", delay: "0.3s", duration: "11.5s" },
-  { id: "b5", image: bubbleArt("donut", "#ffb38d", "#ff8fbb"), size: "md", top: "54%", left: "10%", delay: "1.1s", duration: "10.5s" },
-  { id: "b6", image: bubbleArt("car", "#83dbff", "#6d7fff"), size: "sm", top: "60%", left: "44%", delay: "0.6s", duration: "9s" },
-  { id: "b7", image: bubbleArt("cube", "#ff98cd", "#94c9ff"), size: "md", top: "72%", left: "72%", delay: "1.7s", duration: "12.5s" },
-  { id: "b8", image: bubbleArt("ball", "#ffcf96", "#ff99ba"), size: "sm", top: "78%", left: "24%", delay: "0.4s", duration: "8.8s" },
 ];
 
 const ensureProductGallery = (product) => {
@@ -404,10 +380,12 @@ const formatPhone = (value) => {
 };
 const read = (key, fallback) => {
   try {
-    return JSON.parse(localStorage.getItem(key)) ?? fallback;
+    const value = JSON.parse(localStorage.getItem(key));
+    if (value !== null && value !== undefined) return value;
   } catch {
-    return fallback;
+    return typeof fallback === "function" ? fallback() : fallback;
   }
+  return typeof fallback === "function" ? fallback() : fallback;
 };
 const write = (key, value) => {
   try {
@@ -1106,10 +1084,12 @@ function FloralBackground() {
 }
 
 export default function App() {
+  const compactDevice =
+    typeof window !== "undefined" && (window.innerWidth < 768 || !!window.Telegram?.WebApp);
   const [theme, setTheme] = useState(() => read(STORAGE.theme, "light"));
   const [lang, setLang] = useState(() => read(STORAGE.lang, "uz"));
   const [products, setProducts] = useState(() =>
-    read(STORAGE.products, baseProducts).map(ensureProductGallery),
+    read(STORAGE.products, createBaseProducts).map(ensureProductGallery),
   );
   const [categories, setCategories] = useState(() => read(STORAGE.categories, baseCategories));
   const [cart, setCart] = useState(() => read(STORAGE.cart, []));
@@ -1121,6 +1101,7 @@ export default function App() {
   const [editing, setEditing] = useState(null);
   const [toast, setToast] = useState("");
   const [loading, setLoading] = useState(true);
+  const [renderAmbient, setRenderAmbient] = useState(false);
   const [user, setUser] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [flyers, setFlyers] = useState([]);
@@ -1129,22 +1110,39 @@ export default function App() {
   const [selectedOrigin, setSelectedOrigin] = useState(null);
   const [checkout, setCheckout] = useState({ phone: "", deliveryType: "delivery", location: "", giftWrap: false });
   const [luckyReward, setLuckyReward] = useState(null);
-  const [heroBubbles, setHeroBubbles] = useState(() =>
-    heroBubbleItems.map((item, index) => ({
-      ...item,
-      ...randomBubbleMotion(),
-      key: `${item.id}-${index}`,
-      popped: false,
-    })),
-  );
+  const [heroBubbles, setHeroBubbles] = useState([]);
   const t = i18n[lang];
   const cartButtonRef = useRef(null);
   const logoTapRef = useRef({ count: 0, timer: null });
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setLoading(false), 700);
+    const timer = window.setTimeout(() => setLoading(false), 260);
     return () => clearTimeout(timer);
   }, []);
+  useEffect(() => {
+    let idleId = null;
+    const revealAmbient = () => setRenderAmbient(true);
+    const ambientDelay = compactDevice ? 2200 : 500;
+
+    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+      idleId = window.requestIdleCallback(revealAmbient, { timeout: compactDevice ? 2600 : 1200 });
+      return () => window.cancelIdleCallback?.(idleId);
+    }
+
+    const timer = window.setTimeout(revealAmbient, ambientDelay);
+    return () => window.clearTimeout(timer);
+  }, [compactDevice]);
+  useEffect(() => {
+    if (!renderAmbient || compactDevice) return;
+    setHeroBubbles(
+      createHeroBubbleItems().map((item, index) => ({
+        ...item,
+        ...randomBubbleMotion(),
+        key: `${item.id}-${index}`,
+        popped: false,
+      })),
+    );
+  }, [compactDevice, renderAmbient]);
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
     write(STORAGE.theme, theme);
@@ -1231,13 +1229,14 @@ export default function App() {
     [cart, products],
   );
   const currentTelegramUser = user ?? getTelegramUser();
+  const isLocalHost =
+    typeof window !== "undefined" && ["localhost", "127.0.0.1", "192.168.1.5"].includes(window.location.hostname);
   const adminDebug =
-    typeof window !== "undefined" && window.Telegram?.WebApp
+    isLocalHost && typeof window !== "undefined" && window.Telegram?.WebApp
       ? `TG: ${currentTelegramUser?.id ?? "none"} | ENV: ${String(ADMIN_ID ?? "").trim() || "none"} | ADMIN: ${String(currentTelegramUser?.id ?? "").trim() === String(ADMIN_ID ?? "").trim() ? "YES" : "NO"}`
       : "";
   const admin =
-    String(currentTelegramUser?.id ?? "").trim() === String(ADMIN_ID ?? "").trim() ||
-    (typeof window !== "undefined" && ["localhost", "127.0.0.1", "192.168.1.5"].includes(window.location.hostname));
+    String(currentTelegramUser?.id ?? "").trim() === String(ADMIN_ID ?? "").trim() || isLocalHost;
 
   const triggerAdminEntrance = () => {
     const state = logoTapRef.current;
@@ -1604,37 +1603,40 @@ export default function App() {
 
   return (
     <div className="min-h-screen pb-36 text-candy-ink dark:text-white">
-      <FloralBackground />
+      {renderAmbient && !compactDevice ? <FloralBackground /> : null}
         <div className="mx-auto flex min-h-screen max-w-md flex-col px-4 pb-6 pt-4">
 
 
           <header className="glass header-shell sticky top-0 z-20 overflow-hidden rounded-[28px] border border-white/60 px-4 py-3 shadow-card dark:border-white/10">
-            <div className="header-salute pointer-events-none absolute inset-0">
-              <span className="header-salute-orb header-salute-orb-pink" />
-              <span className="header-salute-orb header-salute-orb-gold" />
-              <span className="header-salute-orb header-salute-orb-blue" />
-              <span className="header-salute-candy header-salute-candy-1" />
-              <span className="header-salute-candy header-salute-candy-2" />
-              <span className="header-salute-candy header-salute-candy-3" />
-              <span className="header-salute-candy header-salute-candy-4" />
-              <span className="header-salute-candy header-salute-candy-5" />
-              <span className="header-salute-candy header-salute-candy-6" />
-              <span className="header-salute-candy header-salute-candy-7" />
-              <span className="header-salute-star header-salute-star-1" />
-              <span className="header-salute-star header-salute-star-2" />
-              <span className="header-salute-star header-salute-star-3" />
-              <span className="header-salute-star header-salute-star-4" />
-              <span className="header-salute-star header-salute-star-5" />
-              <span className="header-salute-star header-salute-star-6" />
-              <span className="header-salute-star header-salute-star-7" />
-            </div>
+            {renderAmbient && !compactDevice ? (
+              <div className="header-salute pointer-events-none absolute inset-0">
+                <span className="header-salute-orb header-salute-orb-pink" />
+                <span className="header-salute-orb header-salute-orb-gold" />
+                <span className="header-salute-orb header-salute-orb-blue" />
+                <span className="header-salute-candy header-salute-candy-1" />
+                <span className="header-salute-candy header-salute-candy-2" />
+                <span className="header-salute-candy header-salute-candy-3" />
+                <span className="header-salute-candy header-salute-candy-4" />
+                <span className="header-salute-candy header-salute-candy-5" />
+                <span className="header-salute-candy header-salute-candy-6" />
+                <span className="header-salute-candy header-salute-candy-7" />
+                <span className="header-salute-star header-salute-star-1" />
+                <span className="header-salute-star header-salute-star-2" />
+                <span className="header-salute-star header-salute-star-3" />
+                <span className="header-salute-star header-salute-star-4" />
+                <span className="header-salute-star header-salute-star-5" />
+                <span className="header-salute-star header-salute-star-6" />
+                <span className="header-salute-star header-salute-star-7" />
+              </div>
+            ) : null}
             <div className="relative flex items-start justify-between gap-3">
               <button type="button" onClick={triggerAdminEntrance} className="relative text-left">
-                <span className="logo-shine pointer-events-none absolute left-8 top-4 h-10 w-36" />
+                {renderAmbient && !compactDevice ? <span className="logo-shine pointer-events-none absolute left-8 top-4 h-10 w-36" /> : null}
                 <img
-                  src="/logo-transparent.png"
+                  src="/logo-optimized.png"
                   alt="Optimall Candy"
                   className="h-24 w-auto max-w-[15rem] object-contain"
+                  decoding="async"
                 />
               </button>
               <div className="flex items-center gap-2">
@@ -1786,7 +1788,7 @@ export default function App() {
           <div className="absolute -right-10 -top-14 h-32 w-32 rounded-full bg-white/20 blur-xl" />
           <div className="absolute -bottom-12 left-0 h-28 w-28 rounded-full bg-candy-plum/30 blur-xl" />
           <div className="hero-sparkles absolute inset-0">
-            {Array.from({ length: 10 }).map((_, index) => (
+            {Array.from({ length: renderAmbient && !compactDevice ? 6 : 0 }).map((_, index) => (
               <span
                 key={index}
                 className="hero-sparkle absolute rounded-full"
@@ -2121,154 +2123,6 @@ export default function App() {
           </div>
         </div>
       ) : null}
-    </div>
-  );
-}
-
-function FireworkName({ user, lang }) {
-  const fallback = lang === "ru" ? "Гость" : "Mehmon";
-  const rawName = user?.first_name?.trim() || user?.username?.trim() || fallback;
-  const displayName = rawName.slice(0, 12);
-  const liteMode = typeof window !== "undefined" && !window.Telegram?.WebApp;
-  const canvasRef = useRef(null);
-  const frameRef = useRef(0);
-  const widthRem = Math.min(10.8, Math.max(6.2, displayName.length * 0.62 + 2.6));
-
-  useEffect(() => {
-    if (liteMode) return undefined;
-    const canvas = canvasRef.current;
-    if (!canvas) return undefined;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return undefined;
-
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const resize = () => {
-      const rect = canvas.getBoundingClientRect();
-      canvas.width = Math.max(1, Math.floor(rect.width * dpr));
-      canvas.height = Math.max(1, Math.floor(rect.height * dpr));
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    };
-
-    const letters = Array.from(displayName);
-    resize();
-
-    const draw = (now) => {
-      const width = canvas.width / dpr;
-      const height = canvas.height / dpr;
-      const baseTime = now * 0.0013;
-
-      ctx.clearRect(0, 0, width, height);
-
-      const gradient = ctx.createLinearGradient(0, 0, width, height);
-      gradient.addColorStop(0, "rgba(255,255,255,0.18)");
-      gradient.addColorStop(1, "rgba(255,255,255,0.02)");
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, width, height);
-
-      const usableWidth = width - 26;
-      const step = letters.length > 1 ? usableWidth / (letters.length - 1) : 0;
-
-      letters.forEach((char, index) => {
-        const targetX = letters.length > 1 ? 13 + step * index : width / 2;
-        const targetY = height * 0.58;
-        const hue = (index * 38 + 20) % 360;
-        const delay = index * 0.3;
-        const cycle = (baseTime - delay) % 4.4;
-        const phase = cycle < 0 ? cycle + 4.4 : cycle;
-
-        if (phase < 0.9) {
-          const p = phase / 0.9;
-          const startX = targetX + (index % 2 === 0 ? -20 : 20);
-          const startY = height + 8;
-          const x = startX + (targetX - startX) * p;
-          const y = startY + (targetY - startY) * p;
-
-          ctx.strokeStyle = `hsla(${hue}, 100%, 66%, ${0.32 + p * 0.82})`;
-          ctx.lineWidth = 2.4;
-          ctx.beginPath();
-          ctx.moveTo(startX, startY);
-          ctx.lineTo(x, y);
-          ctx.stroke();
-
-          ctx.fillStyle = `hsla(${hue}, 100%, 82%, ${0.72 + p * 0.28})`;
-          ctx.beginPath();
-          ctx.arc(x, y, 2.8 + p * 1.6, 0, Math.PI * 2);
-          ctx.fill();
-        } else if (phase < 1.55) {
-          const p = (phase - 0.9) / 0.65;
-          for (let ray = 0; ray < 10; ray += 1) {
-            const angle = (Math.PI * 2 * ray) / 10 + index * 0.22;
-            const length = 4 + p * 12;
-            ctx.strokeStyle = `hsla(${hue}, 100%, 80%, ${0.95 - p * 0.48})`;
-            ctx.lineWidth = 1.8;
-            ctx.beginPath();
-            ctx.moveTo(targetX, targetY);
-            ctx.lineTo(targetX + Math.cos(angle) * length, targetY + Math.sin(angle) * length);
-            ctx.stroke();
-          }
-        }
-
-        const textPhase = Math.min(1, Math.max(0.42, (phase - 0.88) / 0.46));
-        const pulse = 0.78 + Math.sin(baseTime * 4.4 + index) * 0.12;
-        const alpha = Math.min(1, textPhase * pulse);
-
-        if (alpha > 0.02) {
-          ctx.save();
-          ctx.font = "900 19px Arial";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.lineWidth = 2.2;
-          ctx.strokeStyle = `hsla(${hue}, 100%, 28%, ${0.72 * alpha})`;
-          ctx.shadowBlur = 18;
-          ctx.shadowColor = `hsla(${hue}, 100%, 76%, ${0.95 * alpha})`;
-          ctx.fillStyle = `hsla(${hue}, 100%, 84%, ${alpha})`;
-          ctx.strokeText(char === " " ? "" : char.toUpperCase(), targetX, targetY);
-          ctx.fillText(char === " " ? "" : char.toUpperCase(), targetX, targetY);
-          ctx.restore();
-        }
-
-        if (phase > 1.6 && phase < 3.8) {
-          const sparkCount = 2;
-          for (let spark = 0; spark < sparkCount; spark += 1) {
-            const sparkAngle = baseTime * 2.2 + index * 0.7 + spark * Math.PI;
-            const sparkRadius = 7 + spark * 4 + Math.sin(baseTime * 3 + index) * 2;
-            const sparkX = targetX + Math.cos(sparkAngle) * sparkRadius;
-            const sparkY = targetY + Math.sin(sparkAngle) * (sparkRadius * 0.52);
-            ctx.fillStyle = `hsla(${hue}, 100%, 86%, 0.82)`;
-            ctx.beginPath();
-            ctx.arc(sparkX, sparkY, 1.3, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-      });
-
-      frameRef.current = window.requestAnimationFrame(draw);
-    };
-
-    const resizeHandler = () => resize();
-    window.addEventListener("resize", resizeHandler);
-    frameRef.current = window.requestAnimationFrame(draw);
-
-    return () => {
-      window.cancelAnimationFrame(frameRef.current);
-      window.removeEventListener("resize", resizeHandler);
-    };
-  }, [displayName, liteMode]);
-
-  if (liteMode) {
-    return (
-      <div className="firework-name flex items-center justify-center px-4 text-sm font-black text-candy-ink dark:text-white" aria-label={displayName} style={{ width: `${widthRem}rem` }}>
-        {displayName}
-      </div>
-    );
-  }
-
-  return (
-    <div className="firework-name" aria-label={displayName} style={{ width: `${widthRem}rem` }}>
-      <span className="firework-name-glow firework-name-glow-pink" />
-      <span className="firework-name-glow firework-name-glow-blue" />
-      <canvas ref={canvasRef} className="firework-name-canvas" />
     </div>
   );
 }
