@@ -82,6 +82,9 @@ const i18n = {
     categorySaved: "Kategoriya saqlandi",
     categoryDeleted: "Kategoriya o'chirildi",
     productSaved: "Mahsulot saqlandi",
+    productDeleted: "Mahsulot o'chirildi",
+    deleteFailed: "O'chirishda xato bo'ldi",
+    categoryInUseToast: "Bu kategoriyada mahsulotlar bor",
     historyTitle: "Buyurtmalar tarixi",
     historyEmpty: "Hali buyurtmalar yo'q",
     historyItems: "ta mahsulot",
@@ -155,6 +158,9 @@ const i18n = {
     categorySaved: "Категория сохранена",
     categoryDeleted: "Категория удалена",
     productSaved: "Товар сохранен",
+    productDeleted: "Товар удален",
+    deleteFailed: "Не удалось удалить",
+    categoryInUseToast: "В этой категории есть товары",
     historyTitle: "История заказов",
     historyEmpty: "Заказов пока нет",
     historyItems: "товаров",
@@ -438,6 +444,7 @@ const getTelegramUser = () => {
   }
 };
 const slug = (v) => v.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+const getErrorMessage = (error, fallback) => error?.message || error?.details || fallback;
 const toDataUrl = (file) =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -667,7 +674,17 @@ function ZoomableGallery({ product }) {
   );
 }
 
-function AdminPanel({ t, products, categories, setEditing, onDeleteProduct, addCategory, deleteCategory }) {
+function AdminPanel({
+  t,
+  products,
+  categories,
+  setEditing,
+  onDeleteProduct,
+  addCategory,
+  deleteCategory,
+  deletingProductId,
+  deletingCategoryId,
+}) {
   const [uz, setUz] = useState("");
   const [ru, setRu] = useState("");
   const [activeTab, setActiveTab] = useState("products");
@@ -770,10 +787,10 @@ function AdminPanel({ t, products, categories, setEditing, onDeleteProduct, addC
                   <button
                     type="button"
                     onClick={() => deleteCategory(category.id)}
-                    disabled={products.some((item) => item.category === category.id)}
+                    disabled={products.some((item) => item.category === category.id) || deletingCategoryId === category.id}
                     className="rounded-full bg-[#ffc2d8]/14 px-2.5 py-1 text-[10px] font-bold text-[#ffe1ea] disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    {t.deleteProduct}
+                    {deletingCategoryId === category.id ? "..." : t.deleteProduct}
                   </button>
                 </div>
               </div>
@@ -821,7 +838,14 @@ function AdminPanel({ t, products, categories, setEditing, onDeleteProduct, addC
                   <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-white/52">{product.images?.filter(Boolean).length || 1} {t.imagesReady}</p>
                 </div>
                 <button type="button" onClick={() => setEditing(product)} className="rounded-full bg-white/12 px-3 py-2 text-xs font-semibold text-white">{t.editProduct}</button>
-                <button type="button" onClick={() => onDeleteProduct(product.id)} className="rounded-full bg-[#ffc2d8]/14 px-3 py-2 text-xs font-semibold text-[#ffe1ea]">{t.deleteProduct}</button>
+                <button
+                  type="button"
+                  onClick={() => onDeleteProduct(product.id)}
+                  disabled={deletingProductId === product.id}
+                  className="rounded-full bg-[#ffc2d8]/14 px-3 py-2 text-xs font-semibold text-[#ffe1ea] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {deletingProductId === product.id ? "..." : t.deleteProduct}
+                </button>
               </div>
             ))}
           </div>
@@ -1117,6 +1141,8 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [orderHistory, setOrderHistory] = useState([]);
+  const [deletingProductId, setDeletingProductId] = useState("");
+  const [deletingCategoryId, setDeletingCategoryId] = useState("");
   const [flyers, setFlyers] = useState([]);
   const [bubbleBursts, setBubbleBursts] = useState([]);
   const [orderCelebration, setOrderCelebration] = useState(null);
@@ -1579,31 +1605,52 @@ export default function App() {
   };
 
   const deleteCategory = async (categoryId) => {
-    if (products.some((item) => item.category === categoryId)) return;
+    if (products.some((item) => item.category === categoryId)) {
+      setToast(t.categoryInUseToast ?? t.deleteFailed);
+      return;
+    }
+
+    setDeletingCategoryId(categoryId);
 
     if (hasSupabase && supabase) {
-      const { error } = await supabase.from("categories").delete().eq("id", categoryId);
-      if (error) {
-        setToast(t.orderError);
+      const { data, error } = await supabase.from("categories").delete().eq("id", categoryId).select("id");
+      if (error || !data?.length) {
+        setToast(getErrorMessage(error, t.deleteFailed));
+        setDeletingCategoryId("");
         return;
       }
     }
 
     setCategories((current) => current.filter((item) => item.id !== categoryId));
     setToast(t.categoryDeleted);
+    setDeletingCategoryId("");
   };
 
   const deleteProduct = async (productId) => {
+    const previousProducts = products;
+    const previousCart = cart;
+    const nextProducts = previousProducts.filter((item) => item.id !== productId);
+    const nextCart = previousCart.filter((item) => item.id !== productId);
+
+    setDeletingProductId(productId);
+    setProducts(nextProducts);
+    setCart(nextCart);
+    if (selected?.id === productId) setSelected(null);
+    if (editing?.id === productId) setEditing(null);
+
     if (hasSupabase && supabase) {
-      const { error } = await supabase.from("products").delete().eq("id", productId);
-      if (error) {
-        setToast(t.orderError);
+      const { data, error } = await supabase.from("products").delete().eq("id", productId).select("id");
+      if (error || !data?.length) {
+        setProducts(previousProducts);
+        setCart(previousCart);
+        setToast(getErrorMessage(error, t.deleteFailed));
+        setDeletingProductId("");
         return;
       }
     }
 
-    setProducts((current) => current.filter((item) => item.id !== productId));
-    setCart((current) => current.filter((item) => item.id !== productId));
+    setToast(t.productDeleted ?? t.categoryDeleted);
+    setDeletingProductId("");
   };
   useEffect(() => {
     const webApp = tg();
@@ -2129,6 +2176,8 @@ export default function App() {
               onDeleteProduct={deleteProduct}
               addCategory={addCategory}
               deleteCategory={deleteCategory}
+              deletingProductId={deletingProductId}
+              deletingCategoryId={deletingCategoryId}
             />
           </div>
         </Modal>
