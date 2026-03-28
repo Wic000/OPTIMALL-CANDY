@@ -9,6 +9,7 @@ const STORAGE = {
   lang: "optimall-candy-lang",
   products: "optimall-candy-products",
   categories: "optimall-candy-categories",
+  orderHistory: "optimall-candy-order-history",
 };
 
 const ADMIN_ID = import.meta.env.VITE_ADMIN_TELEGRAM_ID ?? "PLACEHOLDER";
@@ -81,6 +82,11 @@ const i18n = {
     categorySaved: "Kategoriya saqlandi",
     categoryDeleted: "Kategoriya o'chirildi",
     productSaved: "Mahsulot saqlandi",
+    historyTitle: "Buyurtmalar tarixi",
+    historyEmpty: "Hali buyurtmalar yo'q",
+    historyItems: "ta mahsulot",
+    historyDelivery: "Yetkazish",
+    historyPickup: "Olib ketish",
   },
   ru: {
     welcome: "Магазин Mini App",
@@ -149,6 +155,11 @@ const i18n = {
     categorySaved: "Категория сохранена",
     categoryDeleted: "Категория удалена",
     productSaved: "Товар сохранен",
+    historyTitle: "История заказов",
+    historyEmpty: "Заказов пока нет",
+    historyItems: "товаров",
+    historyDelivery: "Доставка",
+    historyPickup: "Самовывоз",
   },
 };
 
@@ -409,6 +420,7 @@ const write = (key, value) => {
   }
 };
 const tg = () => window.Telegram?.WebApp;
+const orderHistoryKey = (userId) => `${STORAGE.orderHistory}:${userId || "guest"}`;
 const getTelegramUser = () => {
   const webApp = tg();
   const unsafeUser = webApp?.initDataUnsafe?.user;
@@ -1104,6 +1116,7 @@ export default function App() {
   const [renderAmbient, setRenderAmbient] = useState(false);
   const [user, setUser] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [orderHistory, setOrderHistory] = useState([]);
   const [flyers, setFlyers] = useState([]);
   const [bubbleBursts, setBubbleBursts] = useState([]);
   const [orderCelebration, setOrderCelebration] = useState(null);
@@ -1210,6 +1223,14 @@ export default function App() {
     const timer = window.setTimeout(() => setToast(""), 2400);
     return () => clearTimeout(timer);
   }, [toast]);
+  useEffect(() => {
+    const historyUserId = user?.id ? String(user.id) : "";
+    setOrderHistory(read(orderHistoryKey(historyUserId), []));
+  }, [user?.id]);
+  useEffect(() => {
+    const historyUserId = user?.id ? String(user.id) : "";
+    write(orderHistoryKey(historyUserId), orderHistory);
+  }, [user?.id, orderHistory]);
 
   useEffect(() => {
     setProducts((current) => current.map(ensureProductGallery));
@@ -1439,6 +1460,19 @@ export default function App() {
           products: items,
         });
       }
+
+      setOrderHistory((current) => [
+        {
+          id: `${Date.now()}`,
+          date: new Date().toISOString(),
+          totalPrice,
+          deliveryType: checkout.deliveryType,
+          location: checkout.deliveryType === "delivery" ? checkout.location : "",
+          itemCount: items.reduce((sum, item) => sum + item.quantity, 0),
+          products: items,
+        },
+        ...current,
+      ].slice(0, 12));
 
       tg()?.HapticFeedback?.notificationOccurred?.("success");
       setCart([]);
@@ -1840,6 +1874,46 @@ export default function App() {
             <h2 className="mt-4 text-[30px] font-black leading-[1.05]">{t.heroTitle}</h2>
             <p className="mt-3 max-w-[18rem] text-sm leading-6 text-white/88">{t.heroText}</p>
           </div>
+        </section>
+
+        <section className="mt-5">
+          <div className="mb-3 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-[0.24em] text-candy-pink/80">{t.historyTitle}</p>
+              <h3 className="mt-1 text-xl font-black text-candy-ink dark:text-white">{orderHistory.length}</h3>
+            </div>
+          </div>
+          {orderHistory.length ? (
+            <div className="space-y-3">
+              {orderHistory.slice(0, 5).map((entry) => (
+                <article key={entry.id} className="glass-panel rounded-[26px] p-4 shadow-card">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-black text-candy-ink dark:text-white">{price(entry.totalPrice)}</p>
+                      <p className="mt-1 text-xs text-candy-ink/65 dark:text-white/65">
+                        {new Date(entry.date).toLocaleString(lang === "ru" ? "ru-RU" : "uz-UZ")}
+                      </p>
+                    </div>
+                    <span className="rounded-full bg-white/80 px-3 py-1 text-[11px] font-bold text-candy-ink shadow-card dark:bg-white/10 dark:text-white">
+                      {entry.deliveryType === "delivery" ? t.historyDelivery : t.historyPickup}
+                    </span>
+                  </div>
+                  <p className="mt-3 text-sm font-semibold text-candy-ink/80 dark:text-white/80">
+                    {entry.itemCount} {t.historyItems}
+                  </p>
+                  <div className="mt-2 space-y-1 text-xs text-candy-ink/70 dark:text-white/70">
+                    {entry.products?.slice(0, 3).map((item) => (
+                      <p key={`${entry.id}-${item.id}`}>{item.name} x {item.quantity}</p>
+                    ))}
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="glass-panel rounded-[26px] p-4 text-sm text-candy-ink/65 shadow-card dark:text-white/65">
+              {t.historyEmpty}
+            </div>
+          )}
         </section>
 
         <div className="mt-auto px-2 pb-4 pt-8 text-center">
