@@ -791,152 +791,190 @@ function AdminPanel({
     });
 
   return (
-    <section className="glass-panel animate-rise flex max-h-[calc(100vh-7rem)] flex-col overflow-hidden rounded-[32px] text-white shadow-float">
-      <div className="sticky top-0 z-10 bg-transparent px-4 pb-3 pt-5 backdrop-blur-xl">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs uppercase tracking-[0.24em] text-white/70">{t.adminHint}</p>
-          <h2 className="mt-1 text-2xl font-black">{t.adminPanel}</h2>
-        </div>
-        <button
-          type="button"
-          onClick={() =>
-            setEditing({
-              id: "",
-              name: "",
-              category: categories[0]?.id ?? "Shirinliklar",
-              image: "",
-              images: ["", "", "", ""],
-              price: "",
-              description: "",
-              badge: "",
-            })
-          }
-          className="rounded-full bg-white px-4 py-2 text-sm font-bold text-candy-ink"
-        >
-          {t.addProduct}
-        </button>
-      </div>
-
-      <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
-        {[
-          { id: "products", label: t.adminProducts ?? "Mahsulotlar" },
-          { id: "categories", label: t.adminCategoriesTab ?? "Kategoriyalar" },
-          { id: "stats", label: t.adminStats ?? "Statistika" },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => setActiveTab(tab.id)}
-            className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold ${
-              activeTab === tab.id ? "bg-white text-candy-ink" : "glass-pill text-white/82"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto px-4 pb-5">
-
-      {activeTab === "stats" ? (
-        <div className="mt-5 grid grid-cols-3 gap-3">
-          {stats.map((item) => (
-            <div key={item.id} className="glass-pill rounded-[24px] p-4 text-center">
-              <p className="text-[11px] uppercase tracking-[0.18em] text-white/62">{item.label}</p>
-              <p className="mt-2 text-2xl font-black">{item.value}</p>
+    <section className="glass-panel animate-rise flex max-h-[calc(100vh-2rem)] flex-col overflow-hidden rounded-[34px] text-white shadow-float">
+      <div className="sticky top-0 z-10 border-b border-white/10 bg-[#2a1b43]/86 px-4 pb-4 pt-5 backdrop-blur-2xl">
+        <div className="rounded-[26px] border border-white/10 bg-white/6 p-4 shadow-card">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.24em] text-white/60">{t.adminHint}</p>
+              <h2 className="mt-2 text-2xl font-black">{t.adminPanel}</h2>
             </div>
+            <button
+              type="button"
+              onClick={() =>
+                setEditing({
+                  id: "",
+                  name: "",
+                  category: categories[0]?.id ?? "Shirinliklar",
+                  image: "",
+                  images: ["", "", "", ""],
+                  price: "",
+                  description: "",
+                  badge: "",
+                })
+              }
+              className="rounded-2xl bg-white px-4 py-3 text-sm font-black text-candy-ink shadow-card"
+            >
+              + {t.addProduct}
+            </button>
+          </div>
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            {stats.map((item) => (
+              <div key={item.id} className="rounded-2xl bg-white/8 px-3 py-3 text-center">
+                <p className="text-[10px] uppercase tracking-[0.14em] text-white/58">{item.label}</p>
+                <p className="mt-1 text-lg font-black">{item.value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-3 gap-2">
+          {[
+            { id: "products", label: t.adminProducts ?? "Mahsulotlar" },
+            { id: "categories", label: t.adminCategoriesTab ?? "Kategoriyalar" },
+            { id: "stats", label: t.adminStats ?? "Statistika" },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`rounded-2xl px-3 py-3 text-center text-xs font-black ${
+                activeTab === tab.id
+                  ? "bg-white text-candy-ink shadow-card"
+                  : "bg-white/8 text-white/78"
+              }`}
+            >
+              {tab.label}
+            </button>
           ))}
         </div>
-      ) : null}
+      </div>
 
-      {activeTab === "categories" ? (
-        <div className="glass-pill mt-5 rounded-[26px] p-4">
-          <p className="text-sm font-bold">{t.categories}</p>
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            <input value={uz} onChange={(e) => setUz(e.target.value)} placeholder="Uzbek" className="rounded-2xl border border-white/10 bg-white/10 px-3 py-3 text-sm text-white placeholder:text-white/45 backdrop-blur" />
-            <input value={ru} onChange={(e) => setRu(e.target.value)} placeholder="Russian" className="rounded-2xl border border-white/10 bg-white/10 px-3 py-3 text-sm text-white placeholder:text-white/45 backdrop-blur" />
+      <div className="flex-1 overflow-y-auto px-4 pb-5 pt-4">
+        {activeTab === "stats" ? (
+          <div className="space-y-3">
+            {stats.map((item) => (
+              <div key={item.id} className="rounded-[24px] border border-white/10 bg-white/6 p-4 shadow-card">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-white/62">{item.label}</p>
+                <p className="mt-2 text-3xl font-black">{item.value}</p>
+              </div>
+            ))}
           </div>
-          <button type="button" onClick={() => { addCategory(uz, ru); setUz(""); setRu(""); }} className="mt-3 rounded-2xl bg-white px-4 py-3 text-sm font-bold text-candy-ink">{t.addCategory}</button>
-          <div className="mt-4 space-y-2">
-            {categories.map((category) => (
-              <div key={category.id} className="glass-pill flex items-center justify-between gap-3 rounded-[20px] px-3 py-2 text-xs font-semibold text-white">
-                <div>
-                  <p>{category.name.uz}</p>
-                  <p className="mt-0.5 text-[10px] text-white/62">{category.name.ru}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="rounded-full bg-white/10 px-2 py-1 text-[10px] text-white/72">
-                    {products.filter((item) => item.category === category.id).length} {t.categoryUsed}
-                  </span>
+        ) : null}
+
+        {activeTab === "categories" ? (
+          <div className="space-y-4">
+            <div className="rounded-[26px] border border-white/10 bg-white/6 p-4 shadow-card">
+              <p className="text-sm font-black">{t.categories}</p>
+              <div className="mt-3 grid grid-cols-1 gap-2">
+                <input value={uz} onChange={(e) => setUz(e.target.value)} placeholder="Uzbek" className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-sm text-white placeholder:text-white/45" />
+                <input value={ru} onChange={(e) => setRu(e.target.value)} placeholder="Russian" className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-sm text-white placeholder:text-white/45" />
+              </div>
+              <button type="button" onClick={() => { addCategory(uz, ru); setUz(""); setRu(""); }} className="mt-3 w-full rounded-2xl bg-white px-4 py-3 text-sm font-black text-candy-ink shadow-card">{t.addCategory}</button>
+            </div>
+
+            <div className="space-y-3">
+              {categories.map((category) => (
+                <div key={category.id} className="rounded-[24px] border border-white/10 bg-white/6 p-4 shadow-card">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-black">{category.name.uz}</p>
+                      <p className="mt-1 text-xs text-white/60">{category.name.ru}</p>
+                    </div>
+                    <span className="rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold text-white/74">
+                      {products.filter((item) => item.category === category.id).length} {t.categoryUsed}
+                    </span>
+                  </div>
                   <button
                     type="button"
                     onClick={() => deleteCategory(category.id)}
                     disabled={products.some((item) => item.category === category.id) || deletingCategoryId === category.id}
-                    className="rounded-full bg-[#ffc2d8]/14 px-2.5 py-1 text-[10px] font-bold text-[#ffe1ea] disabled:cursor-not-allowed disabled:opacity-40"
+                    className="mt-4 w-full rounded-2xl bg-[#ffc2d8]/14 px-4 py-3 text-sm font-black text-[#ffe1ea] disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     {deletingCategoryId === category.id ? "..." : t.deleteProduct}
                   </button>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      ) : null}
+        ) : null}
 
-      {activeTab === "products" ? (
-        <div className="mt-5">
-          <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-            <div className="glass-pill rounded-[24px] p-3">
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={t.searchProduct ?? "Mahsulot qidirish"}
-                className="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/45 backdrop-blur"
-              />
-            </div>
-            <div className="glass-pill rounded-[24px] p-3">
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white outline-none"
-              >
-                <option value="newest">{t.adminSort}: {t.newestFirst}</option>
-                <option value="price-high">{t.adminSort}: {t.priceHigh}</option>
-                <option value="price-low">{t.adminSort}: {t.priceLow}</option>
-                <option value="name">{t.adminSort}: {t.nameAZ}</option>
-              </select>
-            </div>
-          </div>
-          <div className="mt-4 space-y-3">
-            {filteredProducts.length === 0 ? (
-              <div className="glass-pill rounded-[24px] p-4 text-center text-sm text-white/75">
-                {t.noProductsYet ?? "Mahsulotlar topilmadi"}
+        {activeTab === "products" ? (
+          <div>
+            <div className="grid gap-3">
+              <div className="rounded-[24px] border border-white/10 bg-white/6 p-3 shadow-card">
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={t.searchProduct ?? "Mahsulot qidirish"}
+                  className="w-full rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-sm text-white placeholder:text-white/45"
+                />
               </div>
-            ) : null}
-            {filteredProducts.map((product) => (
-              <div key={product.id} className="glass-pill flex items-center gap-3 rounded-[24px] p-3">
-                <img src={product.image} alt={product.name} className="h-14 w-14 rounded-2xl object-cover" />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-bold">{product.name}</p>
-                  <p className="text-xs text-white/72">{product.category} · {price(product.price)}</p>
-                  <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-white/52">{product.images?.filter(Boolean).length || 1} {t.imagesReady}</p>
-                </div>
-                <button type="button" onClick={() => setEditing(product)} className="rounded-full bg-white/12 px-3 py-2 text-xs font-semibold text-white">{t.editProduct}</button>
-                <button
-                  type="button"
-                  onClick={() => onDeleteProduct(product.id)}
-                  disabled={deletingProductId === product.id}
-                  className="rounded-full bg-[#ffc2d8]/14 px-3 py-2 text-xs font-semibold text-[#ffe1ea] disabled:cursor-not-allowed disabled:opacity-40"
+              <div className="rounded-[24px] border border-white/10 bg-white/6 p-3 shadow-card">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="w-full rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-sm text-white outline-none"
                 >
-                  {deletingProductId === product.id ? "..." : t.deleteProduct}
-                </button>
+                  <option value="newest">{t.adminSort}: {t.newestFirst}</option>
+                  <option value="price-high">{t.adminSort}: {t.priceHigh}</option>
+                  <option value="price-low">{t.adminSort}: {t.priceLow}</option>
+                  <option value="name">{t.adminSort}: {t.nameAZ}</option>
+                </select>
               </div>
-            ))}
+            </div>
+
+            <div className="mt-4 space-y-3">
+              {filteredProducts.length === 0 ? (
+                <div className="rounded-[24px] border border-white/10 bg-white/6 p-4 text-center text-sm text-white/75 shadow-card">
+                  {t.noProductsYet ?? "Mahsulotlar topilmadi"}
+                </div>
+              ) : null}
+              {filteredProducts.map((product) => (
+                <div key={product.id} className="rounded-[26px] border border-white/10 bg-white/6 p-4 shadow-card">
+                  <div className="flex items-start gap-3">
+                    <img src={product.image} alt={product.name} className="h-20 w-20 rounded-[22px] object-cover" />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="truncate text-base font-black">{product.name}</p>
+                          <p className="mt-1 text-xs text-white/64">{product.category}</p>
+                        </div>
+                        {product.badge ? (
+                          <span className="rounded-full bg-white/12 px-3 py-1 text-[10px] font-black tracking-[0.12em] text-white">
+                            {product.badge}
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="mt-3 text-lg font-black">{price(product.price)}</p>
+                      <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-white/54">
+                        {product.images?.filter(Boolean).length || 1} {t.imagesReady}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setEditing(product)}
+                      className="rounded-2xl bg-white/12 px-4 py-3 text-sm font-black text-white"
+                    >
+                      {t.editProduct}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onDeleteProduct(product.id)}
+                      disabled={deletingProductId === product.id}
+                      className="rounded-2xl bg-[#ffc2d8]/14 px-4 py-3 text-sm font-black text-[#ffe1ea] disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      {deletingProductId === product.id ? "..." : t.deleteProduct}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      ) : null}
+        ) : null}
       </div>
     </section>
   );
