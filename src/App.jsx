@@ -85,6 +85,10 @@ const i18n = {
     productDeleted: "Mahsulot o'chirildi",
     deleteFailed: "O'chirishda xato bo'ldi",
     categoryInUseToast: "Bu kategoriyada mahsulotlar bor",
+    variants: "Variantlar",
+    chooseVariant: "Variantni tanlang",
+    size: "O'lcham",
+    variantPrice: "Variant narxi",
     historyTitle: "Buyurtmalar tarixi",
     historyEmpty: "Hali buyurtmalar yo'q",
     historyItems: "ta mahsulot",
@@ -161,6 +165,10 @@ const i18n = {
     productDeleted: "Товар удален",
     deleteFailed: "Не удалось удалить",
     categoryInUseToast: "В этой категории есть товары",
+    variants: "Варианты",
+    chooseVariant: "Выберите вариант",
+    size: "Размер",
+    variantPrice: "Цена варианта",
     historyTitle: "История заказов",
     historyEmpty: "Заказов пока нет",
     historyItems: "товаров",
@@ -338,6 +346,7 @@ const compactProductPreviewsForStorage = (products) =>
     badge: product.badge,
     image: product.image || product.images?.[0] || "",
     images: product.image ? [product.image] : [],
+    variants: product.variants?.filter((item) => item?.label && Number(item.price) > 0) || [],
   }));
 
 const categoryFromRow = (row) => ({
@@ -357,6 +366,7 @@ const productToRow = (product) => ({
   badge: product.badge || "",
   image: product.image || product.images?.[0] || "",
   images: product.images?.filter(Boolean).slice(0, 4) || [],
+  variants: product.variants?.filter((item) => item?.label && Number(item.price) > 0) || [],
 });
 
 const productFromRow = (row) =>
@@ -369,6 +379,7 @@ const productFromRow = (row) =>
     badge: row.badge,
     image: row.image,
     images: Array.isArray(row.images) ? row.images : [],
+    variants: Array.isArray(row.variants) ? row.variants : [],
   });
 
 const productPreviewFromRow = (row) =>
@@ -381,6 +392,7 @@ const productPreviewFromRow = (row) =>
     badge: row.badge,
     image: row.image,
     images: row.image ? [row.image] : [],
+    variants: Array.isArray(row.variants) ? row.variants : [],
   });
 
 const randomBubbleMotion = () => ({
@@ -406,6 +418,13 @@ const backgroundButterflies = [
 ];
 
 const price = (value) => `${new Intl.NumberFormat("ru-RU").format(value)} so'm`;
+const getEffectivePrice = (product) => {
+  const variantPrices =
+    product?.variants
+      ?.map((item) => Number(item?.price) || 0)
+      .filter((value) => value > 0) ?? [];
+  return variantPrices.length ? Math.min(...variantPrices) : Number(product?.price) || 0;
+};
 const formatPhone = (value) => {
   const digits = value.replace(/\D/g, "").slice(0, 12);
   const normalized = digits.startsWith("998") ? digits : `998${digits.slice(0, 9)}`;
@@ -818,6 +837,12 @@ function AdminPanel({
                   price: "",
                   description: "",
                   badge: "",
+                  variants: [
+                    { label: "1kg", price: "" },
+                    { label: "700gm", price: "" },
+                    { label: "500gm", price: "" },
+                    { label: "300gm", price: "" },
+                  ],
                 })
               }
               className="rounded-2xl bg-white px-4 py-3 text-sm font-black text-candy-ink shadow-card"
@@ -965,7 +990,7 @@ function AdminPanel({
                             </span>
                           ) : null}
                         </div>
-                        <p className="mt-3 text-lg font-black">{price(product.price)}</p>
+                        <p className="mt-3 text-lg font-black">{price(getEffectivePrice(product))}</p>
                         <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-white/54">
                           {product.images?.filter(Boolean).length || 1} {t.imagesReady}
                         </p>
@@ -1006,6 +1031,15 @@ function ProductEditor({ t, product, categories, onClose, onSave }) {
   if (!form) return null;
   const imageSlots = Array.from({ length: 4 }, (_, index) => form.images?.[index] || (index === 0 ? form.image || "" : ""));
   const badgeOptions = ["", "NEW", "HIT"];
+  const variantRows =
+    form.variants?.length
+      ? form.variants
+      : [
+          { label: "1kg", price: "" },
+          { label: "700gm", price: "" },
+          { label: "500gm", price: "" },
+          { label: "300gm", price: "" },
+        ];
 
   return (
     <Modal onClose={onClose} fullscreen>
@@ -1082,6 +1116,41 @@ function ProductEditor({ t, product, categories, onClose, onSave }) {
                 className="w-full rounded-2xl border-0 bg-white/70 px-4 py-3 text-sm outline-none dark:bg-white/8"
               />
             </label>
+          </div>
+
+          <div className="rounded-[24px] bg-candy-ink/[0.05] p-4 dark:bg-white/6">
+            <p className="mb-3 text-sm font-semibold">{t.variants}</p>
+            <div className="space-y-2">
+              {variantRows.map((variant, index) => (
+                <div key={`${variant.label}-${index}`} className="grid grid-cols-[1fr_1fr] gap-2">
+                  <input
+                    value={variant.label}
+                    onChange={(e) =>
+                      setForm((current) => {
+                        const next = [...variantRows];
+                        next[index] = { ...next[index], label: e.target.value };
+                        return { ...current, variants: next };
+                      })
+                    }
+                    placeholder={t.size}
+                    className="rounded-2xl border border-white/10 bg-white/70 px-4 py-3 text-sm outline-none dark:bg-white/8"
+                  />
+                  <input
+                    type="number"
+                    value={variant.price}
+                    onChange={(e) =>
+                      setForm((current) => {
+                        const next = [...variantRows];
+                        next[index] = { ...next[index], price: e.target.value };
+                        return { ...current, variants: next };
+                      })
+                    }
+                    placeholder={t.variantPrice}
+                    className="rounded-2xl border border-white/10 bg-white/70 px-4 py-3 text-sm outline-none dark:bg-white/8"
+                  />
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="rounded-[24px] bg-candy-ink/[0.05] p-4 dark:bg-white/6">
@@ -1361,6 +1430,7 @@ export default function App() {
   const [checkout, setCheckout] = useState({ phone: "", deliveryType: "delivery", location: "", giftWrap: false });
   const [luckyReward, setLuckyReward] = useState(null);
   const [heroBubbles, setHeroBubbles] = useState([]);
+  const [selectedVariant, setSelectedVariant] = useState("");
   const t = i18n[lang];
   const cartButtonRef = useRef(null);
   const logoTapRef = useRef({ count: 0, timer: null });
@@ -1508,7 +1578,7 @@ export default function App() {
     () =>
       cart.reduce((sum, item) => {
         const product = products.find((entry) => entry.id === item.id);
-        return sum + (product?.price ?? 0) * item.quantity;
+        return sum + (item.unitPrice ?? product?.price ?? 0) * item.quantity;
       }, 0),
     [cart, products],
   );
@@ -1548,6 +1618,11 @@ export default function App() {
       .filter((item) => item.id !== selected.id && item.category === selected.category)
       .slice(0, 4);
   }, [products, selected]);
+  const selectedProductVariants = selected?.variants?.filter((item) => item?.label && Number(item.price) > 0) ?? [];
+  const activeSelectedVariant =
+    selectedProductVariants.find((item) => item.label === selectedVariant) ||
+    selectedProductVariants[0] ||
+    null;
 
   const openProduct = async (product, originElement) => {
     if (originElement) {
@@ -1561,6 +1636,7 @@ export default function App() {
       setSelectedOrigin(null);
     }
     setSelected(product);
+    setSelectedVariant(product.variants?.find((item) => item?.label && Number(item.price) > 0)?.label || "");
 
     if (!hasSupabase || !supabase) return;
     if (Array.isArray(product.images) && product.images.length > 1) return;
@@ -1578,6 +1654,7 @@ export default function App() {
       current.map((item) => (item.id === fullProduct.id ? { ...item, images: fullProduct.images, image: fullProduct.image } : item)),
     );
     setSelected((current) => (current?.id === fullProduct.id ? fullProduct : current));
+    setSelectedVariant(fullProduct.variants?.find((item) => item?.label && Number(item.price) > 0)?.label || "");
   };
 
   const animateFlyToCart = (image, sourceElement) => {
@@ -1641,14 +1718,18 @@ export default function App() {
     }, 420);
   };
 
-  const addToCart = (product) => {
+  const addToCart = (product, variant = null) => {
+    const variantKey = variant?.label || "";
+    const unitPrice = Number(variant?.price) || product.price;
     setCart((current) => {
-      const found = current.find((item) => item.id === product.id);
+      const found = current.find((item) => item.id === product.id && (item.variantLabel || "") === variantKey);
       return found
         ? current.map((item) =>
-            item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item,
+            item.id === product.id && (item.variantLabel || "") === variantKey
+              ? { ...item, quantity: item.quantity + 1 }
+              : item,
           )
-        : [...current, { id: product.id, quantity: 1 }];
+        : [...current, { id: product.id, quantity: 1, variantLabel: variantKey, unitPrice }];
     });
     tg()?.HapticFeedback?.impactOccurred?.("light");
     setToast(t.added);
@@ -1674,14 +1755,20 @@ export default function App() {
     setToast(reward);
   };
 
-  const addToCartFromElement = (product, sourceElement) => {
-    addToCart(product);
+  const addToCartFromElement = (product, sourceElement, variant = null) => {
+    addToCart(product, variant);
     animateFlyToCart(product.image, sourceElement);
   };
 
-  const updateQty = (id, quantity) => {
-    if (quantity <= 0) return setCart((current) => current.filter((item) => item.id !== id));
-    setCart((current) => current.map((item) => (item.id === id ? { ...item, quantity } : item)));
+  const updateQty = (id, variantLabel, quantity) => {
+    if (quantity <= 0) return setCart((current) => current.filter((item) => !(item.id === id && (item.variantLabel || "") === (variantLabel || ""))));
+    setCart((current) =>
+      current.map((item) =>
+        item.id === id && (item.variantLabel || "") === (variantLabel || "")
+          ? { ...item, quantity }
+          : item,
+      ),
+    );
   };
 
   const requestLocation = () => {
@@ -1707,7 +1794,13 @@ export default function App() {
         .map((item) => {
           const product = products.find((entry) => entry.id === item.id);
           return product
-            ? { id: product.id, name: product.name, price: product.price, quantity: item.quantity }
+            ? {
+                id: product.id,
+                name: product.name,
+                price: item.unitPrice ?? product.price,
+                quantity: item.quantity,
+                variant: item.variantLabel || "",
+              }
             : null;
         })
         .filter(Boolean);
@@ -1788,15 +1881,19 @@ export default function App() {
             ["#ff7fa3", "#ffbf90", "#fff7d4"],
           ]);
     const previewImage = await resizeDataUrl(form.image || gallery[0] || "", 420, 0.72);
+    const normalizedVariants = (form.variants || [])
+      .map((item) => ({ label: item.label?.trim?.() || "", price: Number(item.price) || 0 }))
+      .filter((item) => item.label && item.price > 0);
     const payload = {
       id: form.id || slug(form.name),
       name: form.name,
       category: form.category,
       image: previewImage || form.image || gallery[0] || svgData(form.name, "#ff7aa8", "#8d76ff", "#fff6d2"),
       images: gallery,
-      price: Number(form.price),
+      price: normalizedVariants.length ? Math.min(...normalizedVariants.map((item) => item.price)) : Number(form.price),
       description: form.description,
       badge: form.badge,
+      variants: normalizedVariants,
     };
 
     if (hasSupabase && supabase) {
@@ -2103,7 +2200,7 @@ export default function App() {
                   </div>
                   <div className="mt-3">
                     <h3 className="truncate text-sm font-bold">{product.name}</h3>
-                    <p className="mt-1 text-lg font-black">{price(product.price)}</p>
+                    <p className="mt-1 text-lg font-black">{price(getEffectivePrice(product))}</p>
                     <span className="mt-2 inline-flex rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-candy-ink shadow-card dark:bg-white dark:text-candy-ink">
                       {t.details}
                     </span>
@@ -2112,7 +2209,8 @@ export default function App() {
                       onClick={(event) => {
                         event.stopPropagation();
                         const sourceImage = event.currentTarget.closest("article")?.querySelector("img");
-                        addToCartFromElement(product, sourceImage);
+                        const defaultVariant = product.variants?.find((item) => item?.label && Number(item.price) > 0) || null;
+                        addToCartFromElement(product, sourceImage, defaultVariant);
                       }}
                       className="mt-3 w-full rounded-2xl bg-candy-ink px-3 py-3 text-sm font-semibold text-white dark:bg-white dark:text-candy-ink"
                     >
@@ -2267,7 +2365,29 @@ export default function App() {
               <p className="mt-2 rounded-[22px] bg-white/92 px-4 py-3 text-sm leading-6 text-candy-ink shadow-card dark:bg-white dark:text-candy-ink">
                 {selected.description}
               </p>
-              <p className="mt-4 text-2xl font-black">{price(selected.price)}</p>
+              {selectedProductVariants.length ? (
+                <div className="mt-4">
+                  <p className="mb-2 text-sm font-semibold">{t.chooseVariant}</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {selectedProductVariants.map((variant) => (
+                      <button
+                        key={variant.label}
+                        type="button"
+                        onClick={() => setSelectedVariant(variant.label)}
+                        className={`rounded-2xl px-4 py-3 text-left ${
+                          activeSelectedVariant?.label === variant.label
+                            ? "bg-candy-ink text-white dark:bg-white dark:text-candy-ink"
+                            : "bg-white/80 text-candy-ink dark:bg-white/10 dark:text-white"
+                        }`}
+                      >
+                        <p className="text-sm font-black">{variant.label}</p>
+                        <p className="mt-1 text-xs font-semibold opacity-75">{price(variant.price)}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+              <p className="mt-4 text-2xl font-black">{price(activeSelectedVariant?.price ?? selected.price)}</p>
               <div className="glass-pill mt-4 rounded-[22px] p-3">
                 <div className="flex items-center justify-between gap-3">
                   <div>
@@ -2315,7 +2435,7 @@ export default function App() {
                 type="button"
                 onClick={(event) => {
                   const sourceImage = event.currentTarget.closest(".product-modal-card-zoom")?.querySelector(".product-zoom-image");
-                  addToCartFromElement(selected, sourceImage);
+                  addToCartFromElement(selected, sourceImage, activeSelectedVariant);
                   setSelected(null);
                 }}
                 className="w-full rounded-2xl bg-candy-ink px-4 py-3 font-semibold text-white dark:bg-white dark:text-candy-ink"
@@ -2347,18 +2467,32 @@ export default function App() {
                   const product = products.find((entry) => entry.id === item.id);
                   if (!product) return null;
                   return (
-                    <div key={item.id} className="glass-pill flex items-center gap-3 rounded-[24px] p-3">
+                    <div key={`${item.id}-${item.variantLabel || "base"}`} className="glass-pill flex items-center gap-3 rounded-[24px] p-3">
                       <img src={product.image} alt={product.name} className="h-16 w-16 rounded-2xl object-cover" />
                       <div className="min-w-0 flex-1">
                         <h4 className="truncate text-sm font-bold">{product.name}</h4>
-                        <p className="mt-1 text-sm font-semibold">{price(product.price)}</p>
+                        {item.variantLabel ? <p className="mt-1 text-xs font-bold text-candy-pink">{item.variantLabel}</p> : null}
+                        <p className="mt-1 text-sm font-semibold">{price(item.unitPrice ?? getEffectivePrice(product))}</p>
                         <div className="mt-2 flex items-center gap-2">
-                          <button type="button" onClick={() => updateQty(item.id, item.quantity - 1)} className="h-8 w-8 rounded-full bg-white text-base shadow-card dark:bg-white/10">-</button>
+                          <button type="button" onClick={() => updateQty(item.id, item.variantLabel, item.quantity - 1)} className="h-8 w-8 rounded-full bg-white text-base shadow-card dark:bg-white/10">-</button>
                           <span className="min-w-6 text-center text-sm font-bold">{item.quantity}</span>
-                          <button type="button" onClick={() => updateQty(item.id, item.quantity + 1)} className="h-8 w-8 rounded-full bg-white text-base shadow-card dark:bg-white/10">+</button>
+                          <button type="button" onClick={() => updateQty(item.id, item.variantLabel, item.quantity + 1)} className="h-8 w-8 rounded-full bg-white text-base shadow-card dark:bg-white/10">+</button>
                         </div>
                       </div>
-                      <button type="button" onClick={() => setCart((current) => current.filter((entry) => entry.id !== item.id))} className="text-xs font-semibold text-candy-pink">{t.remove}</button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setCart((current) =>
+                            current.filter(
+                              (entry) =>
+                                !(entry.id === item.id && (entry.variantLabel || "") === (item.variantLabel || "")),
+                            ),
+                          )
+                        }
+                        className="text-xs font-semibold text-candy-pink"
+                      >
+                        {t.remove}
+                      </button>
                     </div>
                   );
                 })}

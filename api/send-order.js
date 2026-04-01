@@ -10,7 +10,7 @@ function formatOrderMessage(payload) {
   const items = (payload.products ?? [])
     .map(
       (item, index) =>
-        `${index + 1}. ${escapeHtml(item.name)} x ${item.quantity} = ${item.price * item.quantity} so'm`,
+        `${index + 1}. ${escapeHtml(item.name)}${item.variant ? ` (${escapeHtml(item.variant)})` : ""} x ${item.quantity} = ${item.price * item.quantity} so'm`,
     )
     .join("\n");
 
