@@ -82,9 +82,11 @@ const i18n = {
     categorySaved: "Kategoriya saqlandi",
     categoryDeleted: "Kategoriya o'chirildi",
     productSaved: "Mahsulot saqlandi",
+    productSaveError: "Mahsulotni saqlab bo'lmadi",
     productDeleted: "Mahsulot o'chirildi",
     deleteFailed: "O'chirishda xato bo'ldi",
     categoryInUseToast: "Bu kategoriyada mahsulotlar bor",
+    categorySaveError: "Kategoriyani saqlab bo'lmadi",
     variants: "Variantlar",
     chooseVariant: "Variantni tanlang",
     size: "O'lcham",
@@ -162,9 +164,11 @@ const i18n = {
     categorySaved: "Категория сохранена",
     categoryDeleted: "Категория удалена",
     productSaved: "Товар сохранен",
+    productSaveError: "Не удалось сохранить товар",
     productDeleted: "Товар удален",
     deleteFailed: "Не удалось удалить",
     categoryInUseToast: "В этой категории есть товары",
+    categorySaveError: "Не удалось сохранить категорию",
     variants: "Варианты",
     chooseVariant: "Выберите вариант",
     size: "Размер",
@@ -488,6 +492,20 @@ const getTelegramUser = () => {
 };
 const slug = (v) => v.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
 const getErrorMessage = (error, fallback) => error?.message || error?.details || fallback;
+const getReadableError = (error, fallback) => {
+  const raw = getErrorMessage(error, fallback);
+  if (!raw) return fallback;
+  if (/row-level security|permission denied|violates row-level/i.test(raw)) {
+    return `${fallback}. Supabase policy ruxsat bermayapti`;
+  }
+  if (/duplicate key/i.test(raw)) {
+    return `${fallback}. Bu ID yoki nom oldin ishlatilgan`;
+  }
+  if (/telegram api error/i.test(raw)) {
+    return `${fallback}. Bot token yoki chat id ni tekshiring`;
+  }
+  return raw;
+};
 const toDataUrl = (file, maxSide = 1080, quality = 0.82) =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -1833,7 +1851,10 @@ export default function App() {
           date: new Date().toISOString(),
         }),
       });
-      if (!res.ok) throw new Error("request failed");
+      const responseBody = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(responseBody?.details || responseBody?.error || "request failed");
+      }
 
       if (hasSupabase && supabase) {
         await supabase.from("orders").insert({
@@ -1876,7 +1897,7 @@ export default function App() {
     } catch (error) {
       console.error(error);
       tg()?.HapticFeedback?.notificationOccurred?.("error");
-      setToast(t.orderError);
+      setToast(getReadableError(error, t.orderError));
     } finally {
       setSubmitting(false);
     }
@@ -1921,7 +1942,7 @@ export default function App() {
         .single();
 
       if (error) {
-        setToast(t.orderError);
+        setToast(getReadableError(error, t.productSaveError));
         return;
       }
 
@@ -1961,7 +1982,7 @@ export default function App() {
         .single();
 
       if (error) {
-        setToast(t.orderError);
+        setToast(getReadableError(error, t.categorySaveError));
         return;
       }
 
