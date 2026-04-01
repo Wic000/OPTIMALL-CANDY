@@ -536,13 +536,19 @@ const resizeDataUrl = (source, maxSide = 420, quality = 0.72) =>
     image.src = source;
   });
 
-function Modal({ children, onClose, bottom = false }) {
+function Modal({ children, onClose, bottom = false, fullscreen = false }) {
   return (
     <div className={`fixed inset-0 z-50 flex bg-candy-ink/45 px-4 backdrop-blur-sm ${bottom ? "items-end justify-center" : "items-center justify-center pt-20"}`}>
       <button type="button" className="absolute inset-0" onClick={onClose} aria-label="Close" />
       <div
-        className={`relative z-10 w-full max-w-md animate-rise ${bottom ? "mt-auto" : ""}`}
-        style={bottom ? { marginBottom: "calc(1rem + var(--tg-safe-bottom))" } : { marginTop: "max(1rem, env(safe-area-inset-top))", marginBottom: "1rem" }}
+        className={`relative z-10 w-full animate-rise ${fullscreen ? "max-w-5xl" : "max-w-md"} ${bottom ? "mt-auto" : ""}`}
+        style={
+          bottom
+            ? { marginBottom: "calc(1rem + var(--tg-safe-bottom))" }
+            : fullscreen
+              ? { marginTop: "max(0.5rem, env(safe-area-inset-top))", marginBottom: "0.5rem" }
+              : { marginTop: "max(1rem, env(safe-area-inset-top))", marginBottom: "1rem" }
+        }
       >
         {children}
       </div>
@@ -770,6 +776,7 @@ function AdminPanel({
   deleteCategory,
   deletingProductId,
   deletingCategoryId,
+  onClose,
 }) {
   const [uz, setUz] = useState("");
   const [ru, setRu] = useState("");
@@ -791,14 +798,14 @@ function AdminPanel({
     });
 
   return (
-    <section className="glass-panel animate-rise flex max-h-[calc(100vh-2rem)] flex-col overflow-hidden rounded-[34px] text-white shadow-float">
-      <div className="sticky top-0 z-10 border-b border-white/10 bg-[#2a1b43]/86 px-4 pb-4 pt-5 backdrop-blur-2xl">
-        <div className="rounded-[26px] border border-white/10 bg-white/6 p-4 shadow-card">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.24em] text-white/60">{t.adminHint}</p>
-              <h2 className="mt-2 text-2xl font-black">{t.adminPanel}</h2>
-            </div>
+    <section className="glass-panel animate-rise flex h-[calc(100vh-1rem)] flex-col overflow-hidden rounded-[34px] text-white shadow-float">
+      <div className="sticky top-0 z-10 border-b border-white/10 bg-[#201434]/92 px-4 pb-4 pt-4 backdrop-blur-2xl">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.24em] text-white/48">{t.adminHint}</p>
+            <h2 className="mt-2 text-2xl font-black">{t.adminPanel}</h2>
+          </div>
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() =>
@@ -817,164 +824,177 @@ function AdminPanel({
             >
               + {t.addProduct}
             </button>
-          </div>
-          <div className="mt-4 grid grid-cols-3 gap-2">
-            {stats.map((item) => (
-              <div key={item.id} className="rounded-2xl bg-white/8 px-3 py-3 text-center">
-                <p className="text-[10px] uppercase tracking-[0.14em] text-white/58">{item.label}</p>
-                <p className="mt-1 text-lg font-black">{item.value}</p>
-              </div>
-            ))}
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-2xl bg-white/10 px-4 py-3 text-sm font-black text-white"
+            >
+              ✕
+            </button>
           </div>
         </div>
 
         <div className="mt-4 grid grid-cols-3 gap-2">
-          {[
-            { id: "products", label: t.adminProducts ?? "Mahsulotlar" },
-            { id: "categories", label: t.adminCategoriesTab ?? "Kategoriyalar" },
-            { id: "stats", label: t.adminStats ?? "Statistika" },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={`rounded-2xl px-3 py-3 text-center text-xs font-black ${
-                activeTab === tab.id
-                  ? "bg-white text-candy-ink shadow-card"
-                  : "bg-white/8 text-white/78"
-              }`}
-            >
-              {tab.label}
-            </button>
+          {stats.map((item) => (
+            <div key={item.id} className="rounded-2xl border border-white/8 bg-white/6 px-3 py-3 text-center">
+              <p className="text-[10px] uppercase tracking-[0.14em] text-white/58">{item.label}</p>
+              <p className="mt-1 text-lg font-black">{item.value}</p>
+            </div>
           ))}
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-5 pt-4">
-        {activeTab === "stats" ? (
-          <div className="space-y-3">
-            {stats.map((item) => (
-              <div key={item.id} className="rounded-[24px] border border-white/10 bg-white/6 p-4 shadow-card">
-                <p className="text-[11px] uppercase tracking-[0.18em] text-white/62">{item.label}</p>
-                <p className="mt-2 text-3xl font-black">{item.value}</p>
-              </div>
+      <div className="grid min-h-0 flex-1 grid-cols-[92px_minmax(0,1fr)]">
+        <aside className="border-r border-white/10 bg-[#23163a]/88 p-3">
+          <div className="space-y-2">
+            {[
+              { id: "products", label: t.adminProducts ?? "Mahsulotlar", icon: "◫" },
+              { id: "categories", label: t.adminCategoriesTab ?? "Kategoriyalar", icon: "◩" },
+              { id: "stats", label: t.adminStats ?? "Statistika", icon: "◪" },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex w-full flex-col items-center rounded-2xl px-2 py-3 text-center ${
+                  activeTab === tab.id
+                    ? "bg-white text-candy-ink shadow-card"
+                    : "bg-white/8 text-white/74"
+                }`}
+              >
+                <span className="text-lg font-black">{tab.icon}</span>
+                <span className="mt-1 text-[10px] font-black leading-3">{tab.label}</span>
+              </button>
             ))}
           </div>
-        ) : null}
+        </aside>
 
-        {activeTab === "categories" ? (
-          <div className="space-y-4">
-            <div className="rounded-[26px] border border-white/10 bg-white/6 p-4 shadow-card">
-              <p className="text-sm font-black">{t.categories}</p>
-              <div className="mt-3 grid grid-cols-1 gap-2">
-                <input value={uz} onChange={(e) => setUz(e.target.value)} placeholder="Uzbek" className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-sm text-white placeholder:text-white/45" />
-                <input value={ru} onChange={(e) => setRu(e.target.value)} placeholder="Russian" className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-sm text-white placeholder:text-white/45" />
-              </div>
-              <button type="button" onClick={() => { addCategory(uz, ru); setUz(""); setRu(""); }} className="mt-3 w-full rounded-2xl bg-white px-4 py-3 text-sm font-black text-candy-ink shadow-card">{t.addCategory}</button>
-            </div>
-
+        <div className="min-h-0 overflow-y-auto bg-[#2a1b43]/62 px-4 py-4">
+          {activeTab === "stats" ? (
             <div className="space-y-3">
-              {categories.map((category) => (
-                <div key={category.id} className="rounded-[24px] border border-white/10 bg-white/6 p-4 shadow-card">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-black">{category.name.uz}</p>
-                      <p className="mt-1 text-xs text-white/60">{category.name.ru}</p>
-                    </div>
-                    <span className="rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold text-white/74">
-                      {products.filter((item) => item.category === category.id).length} {t.categoryUsed}
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => deleteCategory(category.id)}
-                    disabled={products.some((item) => item.category === category.id) || deletingCategoryId === category.id}
-                    className="mt-4 w-full rounded-2xl bg-[#ffc2d8]/14 px-4 py-3 text-sm font-black text-[#ffe1ea] disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    {deletingCategoryId === category.id ? "..." : t.deleteProduct}
-                  </button>
+              {stats.map((item) => (
+                <div key={item.id} className="rounded-[24px] border border-white/10 bg-white/6 p-4 shadow-card">
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-white/62">{item.label}</p>
+                  <p className="mt-2 text-3xl font-black">{item.value}</p>
                 </div>
               ))}
             </div>
-          </div>
-        ) : null}
+          ) : null}
 
-        {activeTab === "products" ? (
-          <div>
-            <div className="grid gap-3">
-              <div className="rounded-[24px] border border-white/10 bg-white/6 p-3 shadow-card">
-                <input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder={t.searchProduct ?? "Mahsulot qidirish"}
-                  className="w-full rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-sm text-white placeholder:text-white/45"
-                />
-              </div>
-              <div className="rounded-[24px] border border-white/10 bg-white/6 p-3 shadow-card">
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="w-full rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-sm text-white outline-none"
-                >
-                  <option value="newest">{t.adminSort}: {t.newestFirst}</option>
-                  <option value="price-high">{t.adminSort}: {t.priceHigh}</option>
-                  <option value="price-low">{t.adminSort}: {t.priceLow}</option>
-                  <option value="name">{t.adminSort}: {t.nameAZ}</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="mt-4 space-y-3">
-              {filteredProducts.length === 0 ? (
-                <div className="rounded-[24px] border border-white/10 bg-white/6 p-4 text-center text-sm text-white/75 shadow-card">
-                  {t.noProductsYet ?? "Mahsulotlar topilmadi"}
+          {activeTab === "categories" ? (
+            <div className="space-y-4">
+              <div className="rounded-[26px] border border-white/10 bg-white/6 p-4 shadow-card">
+                <p className="text-sm font-black">{t.categories}</p>
+                <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <input value={uz} onChange={(e) => setUz(e.target.value)} placeholder="Uzbek" className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-sm text-white placeholder:text-white/45" />
+                  <input value={ru} onChange={(e) => setRu(e.target.value)} placeholder="Russian" className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-sm text-white placeholder:text-white/45" />
                 </div>
-              ) : null}
-              {filteredProducts.map((product) => (
-                <div key={product.id} className="rounded-[26px] border border-white/10 bg-white/6 p-4 shadow-card">
-                  <div className="flex items-start gap-3">
-                    <img src={product.image} alt={product.name} className="h-20 w-20 rounded-[22px] object-cover" />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="truncate text-base font-black">{product.name}</p>
-                          <p className="mt-1 text-xs text-white/64">{product.category}</p>
-                        </div>
-                        {product.badge ? (
-                          <span className="rounded-full bg-white/12 px-3 py-1 text-[10px] font-black tracking-[0.12em] text-white">
-                            {product.badge}
-                          </span>
-                        ) : null}
+                <button type="button" onClick={() => { addCategory(uz, ru); setUz(""); setRu(""); }} className="mt-3 w-full rounded-2xl bg-white px-4 py-3 text-sm font-black text-candy-ink shadow-card">{t.addCategory}</button>
+              </div>
+
+              <div className="space-y-3">
+                {categories.map((category) => (
+                  <div key={category.id} className="rounded-[24px] border border-white/10 bg-white/6 p-4 shadow-card">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-black">{category.name.uz}</p>
+                        <p className="mt-1 text-xs text-white/60">{category.name.ru}</p>
                       </div>
-                      <p className="mt-3 text-lg font-black">{price(product.price)}</p>
-                      <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-white/54">
-                        {product.images?.filter(Boolean).length || 1} {t.imagesReady}
-                      </p>
+                      <span className="rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold text-white/74">
+                        {products.filter((item) => item.category === category.id).length} {t.categoryUsed}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => deleteCategory(category.id)}
+                      disabled={products.some((item) => item.category === category.id) || deletingCategoryId === category.id}
+                      className="mt-4 w-full rounded-2xl bg-[#ffc2d8]/14 px-4 py-3 text-sm font-black text-[#ffe1ea] disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      {deletingCategoryId === category.id ? "..." : t.deleteProduct}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {activeTab === "products" ? (
+            <div>
+              <div className="grid gap-3 lg:grid-cols-[1fr_240px]">
+                <div className="rounded-[24px] border border-white/10 bg-white/6 p-3 shadow-card">
+                  <input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder={t.searchProduct ?? "Mahsulot qidirish"}
+                    className="w-full rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-sm text-white placeholder:text-white/45"
+                  />
+                </div>
+                <div className="rounded-[24px] border border-white/10 bg-white/6 p-3 shadow-card">
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="w-full rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-sm text-white outline-none"
+                  >
+                    <option value="newest">{t.adminSort}: {t.newestFirst}</option>
+                    <option value="price-high">{t.adminSort}: {t.priceHigh}</option>
+                    <option value="price-low">{t.adminSort}: {t.priceLow}</option>
+                    <option value="name">{t.adminSort}: {t.nameAZ}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="mt-4 space-y-3">
+                {filteredProducts.length === 0 ? (
+                  <div className="rounded-[24px] border border-white/10 bg-white/6 p-4 text-center text-sm text-white/75 shadow-card">
+                    {t.noProductsYet ?? "Mahsulotlar topilmadi"}
+                  </div>
+                ) : null}
+                {filteredProducts.map((product) => (
+                  <div key={product.id} className="rounded-[26px] border border-white/10 bg-white/6 p-4 shadow-card">
+                    <div className="flex items-start gap-3">
+                      <img src={product.image} alt={product.name} className="h-20 w-20 rounded-[22px] object-cover" />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="truncate text-base font-black">{product.name}</p>
+                            <p className="mt-1 text-xs text-white/64">{product.category}</p>
+                          </div>
+                          {product.badge ? (
+                            <span className="rounded-full bg-white/12 px-3 py-1 text-[10px] font-black tracking-[0.12em] text-white">
+                              {product.badge}
+                            </span>
+                          ) : null}
+                        </div>
+                        <p className="mt-3 text-lg font-black">{price(product.price)}</p>
+                        <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-white/54">
+                          {product.images?.filter(Boolean).length || 1} {t.imagesReady}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setEditing(product)}
+                        className="rounded-2xl bg-white/12 px-4 py-3 text-sm font-black text-white"
+                      >
+                        {t.editProduct}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onDeleteProduct(product.id)}
+                        disabled={deletingProductId === product.id}
+                        className="rounded-2xl bg-[#ffc2d8]/14 px-4 py-3 text-sm font-black text-[#ffe1ea] disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        {deletingProductId === product.id ? "..." : t.deleteProduct}
+                      </button>
                     </div>
                   </div>
-
-                  <div className="mt-4 grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setEditing(product)}
-                      className="rounded-2xl bg-white/12 px-4 py-3 text-sm font-black text-white"
-                    >
-                      {t.editProduct}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onDeleteProduct(product.id)}
-                      disabled={deletingProductId === product.id}
-                      className="rounded-2xl bg-[#ffc2d8]/14 px-4 py-3 text-sm font-black text-[#ffe1ea] disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                      {deletingProductId === product.id ? "..." : t.deleteProduct}
-                    </button>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        ) : null}
+          ) : null}
+        </div>
       </div>
     </section>
   );
@@ -988,7 +1008,7 @@ function ProductEditor({ t, product, categories, onClose, onSave }) {
   const badgeOptions = ["", "NEW", "HIT"];
 
   return (
-    <Modal onClose={onClose}>
+    <Modal onClose={onClose} fullscreen>
       <div className="glass-panel rounded-[32px] text-candy-ink shadow-float dark:text-white">
         <div className="sticky top-0 z-10 rounded-t-[32px] border-b border-candy-ink/8 bg-white/70 px-4 pb-4 pt-4 backdrop-blur-xl dark:border-white/8 dark:bg-[#24193b]/80">
           <div className="flex items-start justify-between gap-3">
@@ -2408,7 +2428,7 @@ export default function App() {
       ) : null}
 
       {adminOpen ? (
-        <Modal onClose={() => setAdminOpen(false)}>
+        <Modal onClose={() => setAdminOpen(false)} fullscreen>
           <div className="rounded-[30px]">
             <AdminPanel
               t={t}
@@ -2420,6 +2440,7 @@ export default function App() {
               deleteCategory={deleteCategory}
               deletingProductId={deletingProductId}
               deletingCategoryId={deletingCategoryId}
+              onClose={() => setAdminOpen(false)}
             />
           </div>
         </Modal>
