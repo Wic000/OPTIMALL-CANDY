@@ -89,6 +89,7 @@ const i18n = {
     categorySaveError: "Kategoriyani saqlab bo'lmadi",
     variants: "Variantlar",
     chooseVariant: "Variantni tanlang",
+    chooseVariantFirst: "Avval og'irligini tanlang",
     size: "O'lcham",
     variantPrice: "Variant narxi",
     historyTitle: "Buyurtmalar tarixi",
@@ -171,6 +172,7 @@ const i18n = {
     categorySaveError: "Не удалось сохранить категорию",
     variants: "Варианты",
     chooseVariant: "Выберите вариант",
+    chooseVariantFirst: "Сначала выберите вес",
     size: "Размер",
     variantPrice: "Цена варианта",
     historyTitle: "История заказов",
@@ -1659,9 +1661,7 @@ export default function App() {
   }, [products, selected]);
   const selectedProductVariants = selected?.variants?.filter((item) => item?.label && Number(item.price) > 0) ?? [];
   const activeSelectedVariant =
-    selectedProductVariants.find((item) => item.label === selectedVariant) ||
-    selectedProductVariants[0] ||
-    null;
+    selectedProductVariants.find((item) => item.label === selectedVariant) || null;
 
   const openProduct = async (product, originElement) => {
     if (originElement) {
@@ -1675,7 +1675,7 @@ export default function App() {
       setSelectedOrigin(null);
     }
     setSelected(product);
-    setSelectedVariant(product.variants?.find((item) => item?.label && Number(item.price) > 0)?.label || "");
+    setSelectedVariant("");
 
     if (!hasSupabase || !supabase) return;
     if (Array.isArray(product.images) && product.images.length > 1) return;
@@ -1693,7 +1693,7 @@ export default function App() {
       current.map((item) => (item.id === fullProduct.id ? { ...item, images: fullProduct.images, image: fullProduct.image } : item)),
     );
     setSelected((current) => (current?.id === fullProduct.id ? fullProduct : current));
-    setSelectedVariant(fullProduct.variants?.find((item) => item?.label && Number(item.price) > 0)?.label || "");
+    setSelectedVariant("");
   };
 
   const animateFlyToCart = (image, sourceElement) => {
@@ -2254,8 +2254,12 @@ export default function App() {
                       onClick={(event) => {
                         event.stopPropagation();
                         const sourceImage = event.currentTarget.closest("article")?.querySelector("img");
-                        const defaultVariant = product.variants?.find((item) => item?.label && Number(item.price) > 0) || null;
-                        addToCartFromElement(product, sourceImage, defaultVariant);
+                        const hasVariants = product.variants?.some((item) => item?.label && Number(item.price) > 0);
+                        if (hasVariants) {
+                          openProduct(product, event.currentTarget.closest("article"));
+                          return;
+                        }
+                        addToCartFromElement(product, sourceImage, null);
                       }}
                       className="mt-3 w-full rounded-2xl bg-candy-ink px-3 py-3 text-sm font-semibold text-white dark:bg-white dark:text-candy-ink"
                     >
@@ -2432,7 +2436,7 @@ export default function App() {
                   </div>
                 </div>
               ) : null}
-              <p className="mt-4 text-2xl font-black">{price(activeSelectedVariant?.price ?? selected.price)}</p>
+              <p className="mt-4 text-2xl font-black">{price(activeSelectedVariant?.price ?? getEffectivePrice(selected))}</p>
               <div className="glass-pill mt-4 rounded-[22px] p-3">
                 <div className="flex items-center justify-between gap-3">
                   <div>
@@ -2467,7 +2471,7 @@ export default function App() {
                       >
                         <img src={item.image} alt={item.name} className="h-16 w-full rounded-2xl object-cover" />
                         <p className="mt-2 truncate text-xs font-bold text-candy-ink dark:text-white">{item.name}</p>
-                        <p className="text-[11px] font-semibold text-candy-pink">{price(item.price)}</p>
+                        <p className="text-[11px] font-semibold text-candy-pink">{price(getEffectivePrice(item))}</p>
                       </button>
                     ))}
                   </div>
@@ -2479,11 +2483,16 @@ export default function App() {
               <button
                 type="button"
                 onClick={(event) => {
+                  if (selectedProductVariants.length && !activeSelectedVariant) {
+                    setToast(t.chooseVariantFirst);
+                    return;
+                  }
                   const sourceImage = event.currentTarget.closest(".product-modal-card-zoom")?.querySelector(".product-zoom-image");
                   addToCartFromElement(selected, sourceImage, activeSelectedVariant);
                   setSelected(null);
                 }}
-                className="w-full rounded-2xl bg-candy-ink px-4 py-3 font-semibold text-white dark:bg-white dark:text-candy-ink"
+                disabled={Boolean(selectedProductVariants.length && !activeSelectedVariant)}
+                className="w-full rounded-2xl bg-candy-ink px-4 py-3 font-semibold text-white disabled:opacity-45 dark:bg-white dark:text-candy-ink"
               >
                 {t.addToCart}
               </button>
