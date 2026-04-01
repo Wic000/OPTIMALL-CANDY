@@ -491,6 +491,13 @@ const getTelegramUser = () => {
   }
 };
 const slug = (v) => v.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+const createProductId = (name) => {
+  const base = slug(name) || "product";
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return `${base}-${crypto.randomUUID().slice(0, 8)}`;
+  }
+  return `${base}-${Date.now().toString(36)}`;
+};
 const getErrorMessage = (error, fallback) => error?.message || error?.details || fallback;
 const getReadableError = (error, fallback) => {
   const raw = getErrorMessage(error, fallback);
@@ -1923,7 +1930,7 @@ export default function App() {
             .filter((item) => item.label && item.price > 0)
         : [];
     const payload = {
-      id: form.id || slug(form.name),
+      id: form.id || createProductId(form.name),
       name: form.name,
       category: form.category,
       image: previewImage || form.image || gallery[0] || svgData(form.name, "#ff7aa8", "#8d76ff", "#fff6d2"),
