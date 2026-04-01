@@ -837,12 +837,7 @@ function AdminPanel({
                   price: "",
                   description: "",
                   badge: "",
-                  variants: [
-                    { label: "1kg", price: "" },
-                    { label: "700gm", price: "" },
-                    { label: "500gm", price: "" },
-                    { label: "300gm", price: "" },
-                  ],
+                  variants: [],
                 })
               }
               className="rounded-2xl bg-white px-4 py-3 text-sm font-black text-candy-ink shadow-card"
@@ -1031,8 +1026,9 @@ function ProductEditor({ t, product, categories, onClose, onSave }) {
   if (!form) return null;
   const imageSlots = Array.from({ length: 4 }, (_, index) => form.images?.[index] || (index === 0 ? form.image || "" : ""));
   const badgeOptions = ["", "NEW", "HIT"];
+  const isSweetCategory = form.category === "Shirinliklar";
   const variantRows =
-    form.variants?.length
+    isSweetCategory && form.variants?.length
       ? form.variants
       : [
           { label: "1kg", price: "" },
@@ -1073,7 +1069,23 @@ function ProductEditor({ t, product, categories, onClose, onSave }) {
                 <button
                   key={category.id}
                   type="button"
-                  onClick={() => setForm((current) => ({ ...current, category: category.id }))}
+                  onClick={() =>
+                    setForm((current) => ({
+                      ...current,
+                      category: category.id,
+                      variants:
+                        category.id === "Shirinliklar"
+                          ? current.variants?.length
+                            ? current.variants
+                            : [
+                                { label: "1kg", price: "" },
+                                { label: "700gm", price: "" },
+                                { label: "500gm", price: "" },
+                                { label: "300gm", price: "" },
+                              ]
+                          : [],
+                    }))
+                  }
                   className={`rounded-2xl px-4 py-3 text-left text-sm font-bold ${
                     form.category === category.id
                       ? "bg-candy-ink text-white dark:bg-white dark:text-candy-ink"
@@ -1118,40 +1130,42 @@ function ProductEditor({ t, product, categories, onClose, onSave }) {
             </label>
           </div>
 
-          <div className="rounded-[24px] bg-candy-ink/[0.05] p-4 dark:bg-white/6">
-            <p className="mb-3 text-sm font-semibold">{t.variants}</p>
-            <div className="space-y-2">
-              {variantRows.map((variant, index) => (
-                <div key={`${variant.label}-${index}`} className="grid grid-cols-[1fr_1fr] gap-2">
-                  <input
-                    value={variant.label}
-                    onChange={(e) =>
-                      setForm((current) => {
-                        const next = [...variantRows];
-                        next[index] = { ...next[index], label: e.target.value };
-                        return { ...current, variants: next };
-                      })
-                    }
-                    placeholder={t.size}
-                    className="rounded-2xl border border-white/10 bg-white/70 px-4 py-3 text-sm outline-none dark:bg-white/8"
-                  />
-                  <input
-                    type="number"
-                    value={variant.price}
-                    onChange={(e) =>
-                      setForm((current) => {
-                        const next = [...variantRows];
-                        next[index] = { ...next[index], price: e.target.value };
-                        return { ...current, variants: next };
-                      })
-                    }
-                    placeholder={t.variantPrice}
-                    className="rounded-2xl border border-white/10 bg-white/70 px-4 py-3 text-sm outline-none dark:bg-white/8"
-                  />
-                </div>
-              ))}
+          {isSweetCategory ? (
+            <div className="rounded-[24px] bg-candy-ink/[0.05] p-4 dark:bg-white/6">
+              <p className="mb-3 text-sm font-semibold">{t.variants}</p>
+              <div className="space-y-2">
+                {variantRows.map((variant, index) => (
+                  <div key={`${variant.label}-${index}`} className="grid grid-cols-[1fr_1fr] gap-2">
+                    <input
+                      value={variant.label}
+                      onChange={(e) =>
+                        setForm((current) => {
+                          const next = [...variantRows];
+                          next[index] = { ...next[index], label: e.target.value };
+                          return { ...current, variants: next };
+                        })
+                      }
+                      placeholder={t.size}
+                      className="rounded-2xl border border-white/10 bg-white/70 px-4 py-3 text-sm outline-none dark:bg-white/8"
+                    />
+                    <input
+                      type="number"
+                      value={variant.price}
+                      onChange={(e) =>
+                        setForm((current) => {
+                          const next = [...variantRows];
+                          next[index] = { ...next[index], price: e.target.value };
+                          return { ...current, variants: next };
+                        })
+                      }
+                      placeholder={t.variantPrice}
+                      className="rounded-2xl border border-white/10 bg-white/70 px-4 py-3 text-sm outline-none dark:bg-white/8"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          ) : null}
 
           <div className="rounded-[24px] bg-candy-ink/[0.05] p-4 dark:bg-white/6">
             <div className="mb-3 flex items-center justify-between">
@@ -1881,9 +1895,12 @@ export default function App() {
             ["#ff7fa3", "#ffbf90", "#fff7d4"],
           ]);
     const previewImage = await resizeDataUrl(form.image || gallery[0] || "", 420, 0.72);
-    const normalizedVariants = (form.variants || [])
-      .map((item) => ({ label: item.label?.trim?.() || "", price: Number(item.price) || 0 }))
-      .filter((item) => item.label && item.price > 0);
+    const normalizedVariants =
+      form.category === "Shirinliklar"
+        ? (form.variants || [])
+            .map((item) => ({ label: item.label?.trim?.() || "", price: Number(item.price) || 0 }))
+            .filter((item) => item.label && item.price > 0)
+        : [];
     const payload = {
       id: form.id || slug(form.name),
       name: form.name,
