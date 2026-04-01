@@ -985,67 +985,134 @@ function ProductEditor({ t, product, categories, onClose, onSave }) {
   useEffect(() => setForm(product), [product]);
   if (!form) return null;
   const imageSlots = Array.from({ length: 4 }, (_, index) => form.images?.[index] || (index === 0 ? form.image || "" : ""));
+  const badgeOptions = ["", "NEW", "HIT"];
 
   return (
     <Modal onClose={onClose}>
-      <div className="glass-panel rounded-[30px] p-4 text-candy-ink shadow-float dark:text-white">
-        <h3 className="text-xl font-black">{form.id ? t.editProduct : t.addProduct}</h3>
-        <div className="mt-4 space-y-3">
-          <Field label={t.productName} value={form.name} onChange={(value) => setForm((current) => ({ ...current, name: value }))} />
-          <div>
+      <div className="glass-panel rounded-[32px] text-candy-ink shadow-float dark:text-white">
+        <div className="sticky top-0 z-10 rounded-t-[32px] border-b border-candy-ink/8 bg-white/70 px-4 pb-4 pt-4 backdrop-blur-xl dark:border-white/8 dark:bg-[#24193b]/80">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.22em] text-candy-ink/45 dark:text-white/45">
+                {form.id ? t.editProduct : t.addProduct}
+              </p>
+              <h3 className="mt-2 text-xl font-black">{form.name || (form.id ? t.editProduct : t.addProduct)}</h3>
+            </div>
+            <span className="rounded-full bg-candy-ink/6 px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] dark:bg-white/10">
+              {form.images?.filter(Boolean).length || 0}/4
+            </span>
+          </div>
+        </div>
+
+        <div className="max-h-[calc(100vh-11rem)] space-y-4 overflow-y-auto px-4 py-4">
+          <div className="rounded-[24px] bg-candy-ink/[0.05] p-4 dark:bg-white/6">
+            <div className="grid gap-3">
+              <Field label={t.productName} value={form.name} onChange={(value) => setForm((current) => ({ ...current, name: value }))} />
+              <Field label={t.price} type="number" value={form.price} onChange={(value) => setForm((current) => ({ ...current, price: value }))} />
+            </div>
+          </div>
+
+          <div className="rounded-[24px] bg-candy-ink/[0.05] p-4 dark:bg-white/6">
             <p className="mb-2 text-sm font-semibold">{t.category}</p>
-            <select value={form.category} onChange={(e) => setForm((current) => ({ ...current, category: e.target.value }))} className="w-full rounded-2xl border-0 bg-candy-ink/[0.05] px-4 py-3 text-sm dark:bg-white/6">
-              {categories.map((category) => <option key={category.id} value={category.id}>{category.name.uz} / {category.name.ru}</option>)}
-            </select>
+            <div className="grid grid-cols-1 gap-2">
+              {categories.map((category) => (
+                <button
+                  key={category.id}
+                  type="button"
+                  onClick={() => setForm((current) => ({ ...current, category: category.id }))}
+                  className={`rounded-2xl px-4 py-3 text-left text-sm font-bold ${
+                    form.category === category.id
+                      ? "bg-candy-ink text-white dark:bg-white dark:text-candy-ink"
+                      : "bg-white/70 text-candy-ink dark:bg-white/8 dark:text-white"
+                  }`}
+                >
+                  {category.name.uz} / {category.name.ru}
+                </button>
+              ))}
+            </div>
           </div>
-          <Field label={t.price} type="number" value={form.price} onChange={(value) => setForm((current) => ({ ...current, price: value }))} />
-          <label className="block">
-            <span className="mb-2 block text-sm font-semibold">{t.description}</span>
-            <textarea value={form.description} onChange={(e) => setForm((current) => ({ ...current, description: e.target.value }))} rows={4} className="w-full rounded-2xl border-0 bg-candy-ink/[0.05] px-4 py-3 text-sm outline-none dark:bg-white/6" />
-          </label>
-          <div>
+
+          <div className="rounded-[24px] bg-candy-ink/[0.05] p-4 dark:bg-white/6">
             <p className="mb-2 text-sm font-semibold">{t.badge}</p>
-            <select value={form.badge} onChange={(e) => setForm((current) => ({ ...current, badge: e.target.value }))} className="w-full rounded-2xl border-0 bg-candy-ink/[0.05] px-4 py-3 text-sm dark:bg-white/6">
-              <option value="">{t.noBadge}</option>
-              <option value="NEW">NEW</option>
-              <option value="HIT">HIT</option>
-            </select>
+            <div className="grid grid-cols-3 gap-2">
+              {badgeOptions.map((badge) => (
+                <button
+                  key={badge || "none"}
+                  type="button"
+                  onClick={() => setForm((current) => ({ ...current, badge }))}
+                  className={`rounded-2xl px-3 py-3 text-sm font-black ${
+                    form.badge === badge
+                      ? "bg-candy-ink text-white dark:bg-white dark:text-candy-ink"
+                      : "bg-white/70 text-candy-ink dark:bg-white/8 dark:text-white"
+                  }`}
+                >
+                  {badge || t.noBadge}
+                </button>
+              ))}
+            </div>
           </div>
-          <div>
-            <p className="mb-2 text-sm font-semibold">{t.uploadImage} 1-4</p>
+
+          <div className="rounded-[24px] bg-candy-ink/[0.05] p-4 dark:bg-white/6">
+            <label className="block">
+              <span className="mb-2 block text-sm font-semibold">{t.description}</span>
+              <textarea
+                value={form.description}
+                onChange={(e) => setForm((current) => ({ ...current, description: e.target.value }))}
+                rows={4}
+                className="w-full rounded-2xl border-0 bg-white/70 px-4 py-3 text-sm outline-none dark:bg-white/8"
+              />
+            </label>
+          </div>
+
+          <div className="rounded-[24px] bg-candy-ink/[0.05] p-4 dark:bg-white/6">
+            <div className="mb-3 flex items-center justify-between">
+              <p className="text-sm font-semibold">{t.uploadImage} 1-4</p>
+              <span className="text-[11px] font-bold opacity-60">1-rasm katalogda ko‘rinadi</span>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               {imageSlots.map((image, index) => (
                 <label key={`image-slot-${index}`} className="block">
                   <span className="mb-2 block text-xs font-semibold opacity-75">Rasm {index + 1}</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="w-full text-sm"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      const nextImage = await toDataUrl(file);
-                      setForm((current) => {
-                        const nextImages = Array.from({ length: 4 }, (_, slot) => current.images?.[slot] || (slot === 0 ? current.image || "" : ""));
-                        nextImages[index] = nextImage;
-                        const cleanedImages = nextImages.map((item) => item || "").filter(Boolean);
-                        return {
-                          ...current,
-                          image: nextImages[0] || cleanedImages[0] || "",
-                          images: nextImages,
-                        };
-                      });
-                    }}
-                  />
-                  {image ? <img src={image} alt={`${form.name || "preview"} ${index + 1}`} className="mt-3 h-24 w-full rounded-2xl object-cover" /> : <div className="mt-3 flex h-24 items-center justify-center rounded-2xl border border-dashed border-candy-ink/15 bg-candy-ink/[0.04] text-xs opacity-60 dark:border-white/12 dark:bg-white/6">Preview {index + 1}</div>}
+                  <div className="overflow-hidden rounded-[22px] border border-dashed border-candy-ink/15 bg-white/70 dark:border-white/12 dark:bg-white/8">
+                    {image ? (
+                      <img src={image} alt={`${form.name || "preview"} ${index + 1}`} className="h-28 w-full object-cover" />
+                    ) : (
+                      <div className="flex h-28 items-center justify-center text-xs opacity-60">Preview {index + 1}</div>
+                    )}
+                    <div className="p-2">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="w-full text-xs"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          const nextImage = await toDataUrl(file);
+                          setForm((current) => {
+                            const nextImages = Array.from({ length: 4 }, (_, slot) => current.images?.[slot] || (slot === 0 ? current.image || "" : ""));
+                            nextImages[index] = nextImage;
+                            const cleanedImages = nextImages.map((item) => item || "").filter(Boolean);
+                            return {
+                              ...current,
+                              image: nextImages[0] || cleanedImages[0] || "",
+                              images: nextImages,
+                            };
+                          });
+                        }}
+                      />
+                    </div>
+                  </div>
                 </label>
               ))}
             </div>
           </div>
         </div>
-        <div className="mt-5 flex gap-2">
-          <button type="button" onClick={() => onSave(form)} className="flex-1 rounded-2xl bg-candy-ink px-4 py-3 font-semibold text-white dark:bg-white dark:text-candy-ink">{t.save}</button>
-          <button type="button" onClick={onClose} className="rounded-2xl bg-candy-ink/[0.05] px-4 py-3 font-semibold dark:bg-white/6">{t.cancel}</button>
+
+        <div className="sticky bottom-0 rounded-b-[32px] border-t border-candy-ink/8 bg-white/80 px-4 py-4 backdrop-blur-xl dark:border-white/8 dark:bg-[#24193b]/86">
+          <div className="grid grid-cols-2 gap-2">
+            <button type="button" onClick={onClose} className="rounded-2xl bg-candy-ink/[0.06] px-4 py-3 font-black dark:bg-white/8">{t.cancel}</button>
+            <button type="button" onClick={() => onSave(form)} className="rounded-2xl bg-candy-ink px-4 py-3 font-black text-white dark:bg-white dark:text-candy-ink">{t.save}</button>
+          </div>
         </div>
       </div>
     </Modal>
